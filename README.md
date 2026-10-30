@@ -18,7 +18,7 @@ A small, single-user token store for AI agents. You keep API tokens and password
 - `tok login <server>`: a device flow. The CLI prints a link and a code. You approve in the browser with a passkey or password, pick the scopes, and pick the lifetime (default and maximum set on the server).
 - `tok ls`: the catalog the agent sees. It shows name, scope, description, when to use, added, last used, approval flag and expiry. It never shows values.
 - `tok exec --reason ... NAME -- cmd`: runs `cmd` with the token in an environment variable and masks the value in its output.
-- `tok get --reason ... NAME`: prints the value.
+- `tok get --reason ... NAME`: prints the value. When tok runs under an AI agent (`AI_AGENT`, `CLAUDECODE`, `CLAUDE_CODE_SESSION_ID` or `CODEX_THREAD_ID` set) it refuses unless `--reveal` is given, so agents use `exec` and the value stays out of their context.
 - Approval: a gated token makes tok print an approval link and exit 3. You open the link, check the reason, host, directory and command, and confirm with a passkey or password. You then choose 5, 15 or 60 minutes. Within that window the same machine can use the token again without asking.
 - Event log: every use, denial, approval, login and change, with the reason, host, login, directory, command and agent session (Claude Code session id, T3 thread id).
 

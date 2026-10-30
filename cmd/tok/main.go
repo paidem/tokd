@@ -27,7 +27,8 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
   tok exec --reason TEXT NAME[=ENV]... -- COMMAND [ARGS]
                                 run COMMAND with the tokens in env vars;
                                 their values are masked in its output
-  tok get --reason TEXT NAME    print a token value (prefer exec)
+  tok get --reason TEXT NAME    print a token value (prefer exec); under an
+                                agent it needs --reveal
   tok wait REQUEST_ID           block until an approval is decided
   tok version                   print the client version and build time
 
@@ -197,7 +198,7 @@ func main() {
 // opts is a tiny flag parser that allows flags after positional args (tok get NAME --reason x).
 type opts struct {
 	reason, scope, timeout string
-	json, noRedact         bool
+	json, noRedact, reveal bool
 	pos, rest              []string
 }
 
@@ -230,6 +231,8 @@ func parse(args []string) (*opts, error) {
 			o.json = true
 		case "--no-redact":
 			o.noRedact = true
+		case "--reveal":
+			o.reveal = true
 		default:
 			if strings.HasPrefix(a, "-") {
 				return nil, fmt.Errorf("unknown flag %s", a)
@@ -435,6 +438,17 @@ func cmdList(args []string) error {
 	return w.Flush()
 }
 
+// agentEnv names the first environment variable showing tok runs under an AI agent, or "".
+// T3CODE_THREAD_ID is left out: it identifies the host app, which also runs human terminals.
+func agentEnv() string {
+	for _, k := range []string{"AI_AGENT", "CLAUDECODE", "CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID"} {
+		if os.Getenv(k) != "" {
+			return k
+		}
+	}
+	return ""
+}
+
 func agentInfo() string {
 	var parts []string
 	for _, k := range []string{"AI_AGENT", "CLAUDE_CODE_SESSION_ID", "T3CODE_THREAD_ID", "CODEX_THREAD_ID"} {
@@ -528,11 +542,22 @@ func cmdGet(args []string) error {
 	if len(o.pos) != 1 || o.reason == "" {
 		return errors.New(`usage: tok get --reason "why you need it" NAME`)
 	}
+	// Under an agent the printed value lands in the model's context, and output redaction
+	// (e.g. secret-guard) only catches values with a recognisable shape. exec keeps it out.
+	if v := agentEnv(); v != "" && !o.reveal {
+		return fmt.Errorf("tok get prints the secret into the agent's output (%s is set). "+
+			"Use tok exec instead: the value goes into the command's environment and is masked in its output. "+
+			"If the user explicitly asked for the raw value, add --reveal", v)
+	}
 	c, err := loadConfig()
 	if err != nil {
 		return err
 	}
-	res, err := use(c, o.pos[0], o.reason, "tok get "+o.pos[0])
+	cmdline := "tok get " + o.pos[0]
+	if o.reveal {
+		cmdline = "tok get --reveal " + o.pos[0]
+	}
+	res, err := use(c, o.pos[0], o.reason, cmdline)
 	if err != nil {
 		return err
 	}
