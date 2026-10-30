@@ -6,7 +6,8 @@
 <a href="/events" {{if eq .Page "events"}}class="on"{{end}}>Events</a>
 <a href="/logins" {{if eq .Page "logins"}}class="on"{{end}}>Logins</a>
 <a href="/settings" {{if eq .Page "settings"}}class="on"{{end}}>Settings</a>
-<form method="post" action="/logout"><button class="small">log out</button></form>{{end}}</nav>
+<a href="/install" {{if eq .Page "install"}}class="on"{{end}}>Install</a>
+<form method="post" action="/logout"><button class="small">log out</button></form>{{else}}<a href="/install" {{if eq .Page "install"}}class="on"{{end}}>Install tok</a>{{end}}</nav>
 <main>{{template "content" .}}</main></body></html>{{end}}
 {{define "authbuttons"}}
 <div class="row">{{if .Passkeys}}<button class="primary" data-method="passkey">{{.Verb}} with passkey</button><span class="mut">or</span>{{end}}

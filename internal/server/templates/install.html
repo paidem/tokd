@@ -1,0 +1,10 @@
+{{define "content"}}<h1>Install tok</h1>
+<div class="card" style="max-width:860px"><h3>macOS / Linux</h3>
+<p>Installs <code>tok</code> to <code>~/.local/bin</code> and the Claude Code skill to <code>~/.claude/skills/tok</code>:</p>
+<pre class="mono">curl -fsSL {{.URL}}/install.sh | sh
+tok login {{.URL}}</pre>
+<p class="mut">Override with <code>TOK_BIN_DIR</code> / <code>TOK_SKILL_DIR</code>, e.g. <code>curl -fsSL {{.URL}}/install.sh | TOK_SKILL_DIR=~/.codex/skills/tok sh</code>.</p></div>
+<div class="card" style="max-width:860px"><h3>Downloads</h3>
+{{if .Files}}<ul>{{range .Files}}<li><a href="/dl/{{.}}" download>{{.}}</a></li>{{end}}</ul>
+<p class="mut">macOS: files downloaded with a browser are quarantined; run <code>xattr -d com.apple.quarantine tok-darwin-*</code> or use the curl installer. Windows: save <code>tok-windows-amd64.exe</code> as <code>tok.exe</code> somewhere in PATH.</p>
+{{else}}<p class="err">No binaries in the download directory. The Docker image includes them; for a source run build them with <code>make dist</code>.</p>{{end}}</div>{{end}}

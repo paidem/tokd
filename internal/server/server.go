@@ -17,18 +17,23 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
+// Version is set at build time: -ldflags "-X github.com/paidem/tokd/internal/server.Version=v1.2.3".
+var Version = "dev"
+
 type Config struct {
-	Addr    string // listen address, e.g. ":19191"
-	URL     string // public origin as typed in the browser, e.g. "http://localhost:19191"
-	DataDir string
-	KeyFile string
+	Addr      string // listen address, e.g. ":19191"
+	URL       string // public origin as typed in the browser, e.g. "http://localhost:19191"
+	DataDir   string
+	KeyFile   string
+	Downloads string // directory with tok binaries and SKILL.md served at /dl/
 }
 
 func ConfigFromEnv() Config {
 	c := Config{
-		Addr:    env("TOKD_ADDR", ":19191"),
-		URL:     strings.TrimRight(env("TOKD_URL", "http://localhost:19191"), "/"),
-		DataDir: env("TOKD_DATA", "./data"),
+		Addr:      env("TOKD_ADDR", ":19191"),
+		URL:       strings.TrimRight(env("TOKD_URL", "http://localhost:19191"), "/"),
+		DataDir:   env("TOKD_DATA", "./data"),
+		Downloads: env("TOKD_DOWNLOADS", "./dist"),
 	}
 	c.KeyFile = env("TOKD_KEY_FILE", filepath.Join(c.DataDir, "master.key"))
 	return c
@@ -140,7 +145,7 @@ func New(cfg Config) (*Server, error) {
 
 func (s *Server) ListenAndServe() error {
 	go s.janitor()
-	log.Printf("tokd listening on %s, public URL %s", s.cfg.Addr, s.cfg.URL)
+	log.Printf("tokd %s listening on %s, public URL %s", Version, s.cfg.Addr, s.cfg.URL)
 	srv := &http.Server{Addr: s.cfg.Addr, Handler: s.routes(), ReadHeaderTimeout: 10 * time.Second}
 	return srv.ListenAndServe()
 }
@@ -189,6 +194,9 @@ func (s *Server) routes() http.Handler {
 	m.HandleFunc("POST /passkeys/finish", s.withSession(s.passkeyRegisterFinish))
 	m.HandleFunc("POST /passkeys/{id}/delete", s.withSession(s.doPasskeyDelete))
 	m.Handle("GET /static/", http.FileServerFS(staticFS))
+	m.Handle("GET /dl/", http.StripPrefix("/dl/", http.FileServerFS(os.DirFS(s.cfg.Downloads))))
+	m.HandleFunc("GET /install", s.pageInstall)
+	m.HandleFunc("GET /install.sh", s.installScript)
 	return s.sameOrigin(m)
 }
 

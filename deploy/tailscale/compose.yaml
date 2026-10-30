@@ -2,7 +2,7 @@
 # Not published on the host network at all; only the tailnet can reach it.
 # Usage: cp .env.example .env, edit, then:
 #   mkdir -p data key ts-state && sudo chown 65532:65532 data key
-#   docker compose up -d --build
+#   docker compose up -d          (update: docker compose pull && docker compose up -d)
 services:
   tailscale:
     image: tailscale/tailscale:stable
@@ -19,8 +19,7 @@ services:
       - ./serve.json:/config/serve.json:ro
 
   tokd:
-    build: ../..
-    image: tokd:local
+    image: ghcr.io/paidem/tokd:${TOKD_TAG:-latest}   # or: build: ../..
     restart: unless-stopped
     network_mode: service:tailscale        # shares the node's network; serve proxies to 127.0.0.1:19191
     depends_on: [tailscale]

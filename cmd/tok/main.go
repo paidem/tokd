@@ -29,6 +29,7 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
                                 their values are masked in its output
   tok get --reason TEXT NAME    print a token value (prefer exec)
   tok wait REQUEST_ID           block until an approval is decided
+  tok version                   print the client version
 
 Every exec/get is logged on the server with the reason, host, directory and
 command. Tokens marked "needs approval" print an approval link and exit 3;
@@ -77,6 +78,8 @@ func saveConfig(c *config) error {
 	raw, _ := json.MarshalIndent(c, "", "  ")
 	return os.WriteFile(p, raw, 0o600)
 }
+
+var version = "dev" // set by -ldflags "-X main.version=..."
 
 var httpc = &http.Client{Timeout: 30 * time.Second}
 
@@ -145,6 +148,9 @@ func main() {
 		code, err = cmdExec(args)
 	case "wait":
 		err = cmdWait(args)
+	case "version", "--version":
+		fmt.Println("tok", version)
+		return
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return

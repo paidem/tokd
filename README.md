@@ -19,6 +19,8 @@ A small, single-user token store for AI agents. You keep API tokens and password
 
 ## Run it
 
+Images: `ghcr.io/paidem/tokd` (linux/amd64 + arm64). `:latest` and `:X.Y.Z` come from release tags `vX.Y.Z`, `:main` from the main branch. Release tags also publish the `tok` binaries on the GitHub release page.
+
 Local, single machine:
 
 ```bash
@@ -40,6 +42,7 @@ On a server, put it behind HTTPS and set `TOKD_URL` to the exact origin you open
 | `TOKD_URL` | `http://localhost:19191` | public origin; used for passkeys, CSRF checks and links |
 | `TOKD_ADDR` | `:19191` | listen address |
 | `TOKD_DATA` | `./data` (`/data` in the image) | SQLite database |
+| `TOKD_DOWNLOADS` | `./dist` (`/downloads` in the image) | client binaries and SKILL.md served at `/dl/` |
 | `TOKD_KEY_FILE` | `$TOKD_DATA/master.key` | 32-byte key, created on first start; compose keeps it in a separate volume |
 | `TZ` | `UTC` | time zone for the web UI |
 
@@ -47,15 +50,18 @@ Back up both the database and the key. Neither is any use without the other.
 
 ## Install the client
 
+From a running tokd (the Docker image bundles `tok` for macOS, Linux and Windows plus the agent skill):
+
 ```bash
-go build -o ~/.local/bin/tok ./cmd/tok
-GOOS=linux GOARCH=amd64 go build -o dist/tok-linux-amd64 ./cmd/tok
-GOOS=windows GOARCH=amd64 go build -o dist/tok.exe ./cmd/tok
+curl -fsSL https://tok.example.ts.net/install.sh | sh    # tok -> ~/.local/bin, skill -> ~/.claude/skills/tok
+tok login https://tok.example.ts.net
 ```
 
-The config is stored in `~/.config/tok/config.json` (`%AppData%\tok\config.json` on Windows), mode 0600. Override the path with `TOK_CONFIG`.
+The `/install` page lists the individual downloads. Installer overrides: `TOK_BIN_DIR`, `TOK_SKILL_DIR`. An existing skill symlink is left untouched.
 
-For Claude Code, link the skill: `ln -s $PWD/skills/tok ~/.claude/skills/tok`.
+From source: `make dist` builds every platform into `dist/` (what tokd serves at `/dl/` when run outside Docker), or `go build -o ~/.local/bin/tok ./cmd/tok`.
+
+The config is stored in `~/.config/tok/config.json` (`%AppData%\tok\config.json` on Windows), mode 0600. Override the path with `TOK_CONFIG`.
 
 ## Security model
 
