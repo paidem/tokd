@@ -59,11 +59,11 @@ Back up both the database and the key. Neither is any use without the other.
 From a running tokd (the Docker image bundles `tok` for macOS, Linux and Windows plus the agent skill):
 
 ```bash
-curl -fsSL https://tok.example.ts.net/install.sh | sh    # tok -> ~/.local/bin, skill -> ~/.claude/skills/tok
+curl -fsSL https://tok.example.ts.net/install.sh | sh    # tok -> ~/.local/bin; skills for detected Claude Code and Codex
 tok login https://tok.example.ts.net
 ```
 
-The `/install` page lists the individual downloads. Installer overrides: `TOK_BIN_DIR`, `TOK_SKILL_DIR`. An existing skill symlink is left untouched.
+The installer adds the Claude Code skill at `~/.claude/skills/tok` when `~/.claude` exists, and the Codex skill at `~/.agents/skills/tok` when `codex` is on PATH or `${CODEX_HOME:-$HOME/.codex}` exists. Both are installed when both agents are found. The `/install` page lists individual downloads. Override the binary location with `TOK_BIN_DIR`; setting `TOK_SKILL_DIR` installs only to that skill directory instead of detecting agents. Symlinked skill directories and `SKILL.md` files are left untouched. Downloads use temporary files beside their destinations and rename them after success, preserving existing files if a download fails.
 
 From source: `make dist` builds every platform into `dist/` (what tokd serves at `/dl/` when run outside Docker), or `go build -o ~/.local/bin/tok ./cmd/tok`.
 
