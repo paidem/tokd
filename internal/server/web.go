@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -42,11 +43,15 @@ var funcs = template.FuncMap{
 		}
 		return ""
 	},
-	"ago": func(t *time.Time) string {
-		if t == nil {
+	"ago": func(v any) string {
+		t, ok := v.(time.Time)
+		if p, isPtr := v.(*time.Time); isPtr && p != nil {
+			t, ok = *p, true
+		}
+		if !ok {
 			return "never"
 		}
-		d := time.Since(*t)
+		d := time.Since(t)
 		switch {
 		case d < time.Minute:
 			return "just now"
@@ -344,6 +349,107 @@ func (s *Server) doApprove(w http.ResponseWriter, r *http.Request) {
 
 // --- tokens ---
 
+type attention struct {
+	Token *Token
+	Note  string
+	Level string // err | warn | "" (informational)
+}
+
+type dayUses struct {
+	Day time.Time
+	N   int
+	Pct int
+}
+
+func (s *Server) pageDashboard(w http.ResponseWriter, r *http.Request) {
+	toks, err := s.db.tokens(nil)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	now := time.Now()
+	y, m, d := now.Date()
+	const days = 30
+	start := time.Date(y, m, d-days+1, 0, 0, 0, 0, now.Location())
+	monthAgo, weekAgo := now.AddDate(0, 0, -30), now.AddDate(0, 0, -7)
+
+	approval, scopeOf := 0, map[string]string{}
+	var attn []attention
+	for _, t := range toks {
+		scopeOf[t.Name] = t.Scope
+		if t.NeedsApproval {
+			approval++
+		}
+		switch {
+		case t.Expired():
+			attn = append(attn, attention{t, "Expired " + t.ExpiresAt.Format("2006-01-02"), "err"})
+		case t.ExpiresAt != nil && t.ExpiresAt.Before(now.AddDate(0, 0, 30)):
+			n := int(time.Until(*t.ExpiresAt).Hours()/24) + 1
+			attn = append(attn, attention{t, fmt.Sprintf("Expires in %d day%s", n, plural(n)), "warn"})
+		case t.LastUsedAt == nil && t.CreatedAt.Before(monthAgo):
+			attn = append(attn, attention{t, "Never used, added " + t.CreatedAt.Format("2006-01-02"), ""})
+		case t.LastUsedAt != nil && t.LastUsedAt.Before(now.AddDate(0, 0, -90)):
+			attn = append(attn, attention{t, "Not used since " + t.LastUsedAt.Format("2006-01-02"), ""})
+		}
+	}
+
+	counts, _ := s.db.dailyUses(start, days)
+	peak := 0
+	for _, n := range counts {
+		peak = max(peak, n)
+	}
+	chart := make([]dayUses, days)
+	for i, n := range counts {
+		chart[i] = dayUses{Day: start.AddDate(0, 0, i), N: n}
+		if peak > 0 {
+			chart[i].Pct = n * 100 / peak
+		}
+	}
+
+	top, _ := s.db.topTokens(monthAgo, 6)
+	type topRow struct {
+		TokenUse
+		Scope string
+		Pct   int
+	}
+	var topRows []topRow
+	for _, u := range top {
+		topRows = append(topRows, topRow{u, scopeOf[u.Name], u.Uses * 100 / top[0].Uses})
+	}
+
+	recent, _ := s.db.events(EventFilter{Kinds: []string{"use", "approval_requested", "approved", "approval_denied", "denied"}, Limit: 20})
+	logins, _ := s.db.logins()
+	active := 0
+	for _, l := range logins {
+		if l.Active() {
+			active++
+		}
+	}
+	var pending []approvalRequest
+	s.mu.Lock()
+	for _, ar := range s.requests {
+		if ar.Status == "pending" && now.Before(ar.Expires) {
+			pending = append(pending, *ar)
+		}
+	}
+	s.mu.Unlock()
+	sort.Slice(pending, func(i, j int) bool { return pending[i].Created.Before(pending[j].Created) })
+
+	s.render(w, r, "dashboard", map[string]any{
+		"Pending": pending, "Tokens": len(toks), "NeedApproval": approval,
+		"Used7": s.db.usedTokens(weekAgo), "Used30": s.db.usedTokens(monthAgo),
+		"Uses30": s.db.countEvents("use", monthAgo), "Denied30": s.db.countEvents("denied", monthAgo) + s.db.countEvents("approval_denied", monthAgo),
+		"Active": active, "Chart": chart, "Peak": peak, "Top": topRows, "Attention": attn, "Recent": recent,
+	})
+}
+
+func plural(n int) string {
+	if n == 1 {
+		return ""
+	}
+	return "s"
+}
+
 func (s *Server) pageTokens(w http.ResponseWriter, r *http.Request) {
 	toks, err := s.db.tokens(nil)
 	if err != nil {
@@ -499,7 +605,7 @@ func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
 		}
 		s.db.logEvent(Event{Kind: "token_updated", Token: t.Name, Scope: t.Scope, Detail: detail})
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/tokens", http.StatusSeeOther)
 }
 
 func friendlyDBError(err error) string {
@@ -519,7 +625,7 @@ func (s *Server) doTokenDelete(w http.ResponseWriter, r *http.Request) {
 		_, _ = s.db.Exec(`DELETE FROM tokens WHERE id=?`, id)
 		s.db.logEvent(Event{Kind: "token_deleted", Token: t.Name, Scope: t.Scope})
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/tokens", http.StatusSeeOther)
 }
 
 func (s *Server) doTokenReveal(w http.ResponseWriter, r *http.Request) {

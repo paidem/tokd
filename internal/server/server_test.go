@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestFlow: setup -> add scope+tokens -> tok login (device flow) -> list -> use -> approval window.
@@ -131,6 +132,15 @@ func TestFlow(t *testing.T) {
 		t.Fatalf("use after approval: %d %v", st, out)
 	}
 
+	if n := s.db.usedTokens(time.Now().Add(-time.Hour)); n != 2 {
+		t.Fatalf("usedTokens = %d, want 2", n)
+	}
+	if r, _ := web.Get(ts.URL + "/"); r != nil {
+		b, _ := io.ReadAll(r.Body)
+		if !strings.Contains(string(b), "Most used, last 30 days") || !strings.Contains(string(b), "run a read-only query on prod") {
+			t.Fatal("dashboard missing stats or recent requests")
+		}
+	}
 	evs, _ := s.db.events(EventFilter{Kind: "use"})
 	if len(evs) != 2 || evs[0].Reason == "" || evs[0].Host != "testhost" {
 		t.Fatalf("events: %+v", evs)

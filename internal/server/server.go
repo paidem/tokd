@@ -174,7 +174,8 @@ func (s *Server) routes() http.Handler {
 
 	// admin web app (session cookie)
 	m.HandleFunc("POST /logout", s.withSession(s.doLogout))
-	m.HandleFunc("GET /{$}", s.withSession(s.pageTokens))
+	m.HandleFunc("GET /{$}", s.withSession(s.pageDashboard))
+	m.HandleFunc("GET /tokens", s.withSession(s.pageTokens))
 	m.HandleFunc("GET /tokens/new", s.withSession(s.pageTokenEdit))
 	m.HandleFunc("GET /tokens/{id}", s.withSession(s.pageTokenEdit))
 	m.HandleFunc("POST /tokens", s.withSession(s.doTokenSave))

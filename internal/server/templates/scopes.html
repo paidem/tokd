@@ -1,7 +1,7 @@
 {{define "content"}}<header class="head"><div><h1>Scopes</h1><p class="lede">Each token belongs to one scope. <code>tok login</code> picks the scopes a machine may use, and agents see the scope to tell home from work.</p></div></header>
 {{with .Error}}<p class="alert err">{{.}}</p>{{end}}
 <div class="tablewrap"><table class="scopes"><thead><tr><th>Scope</th><th>Description</th><th>Tokens</th><th></th></tr></thead><tbody>
-{{range .Scopes}}<tr class="{{sc .Name}}"><td class="tok"><a class="tag {{sc .Name}}" href="/?scope={{.Name}}">{{.Name}}</a></td>
+{{range .Scopes}}<tr class="{{sc .Name}}"><td class="tok"><a class="tag {{sc .Name}}" href="/tokens?scope={{.Name}}">{{.Name}}</a></td>
 <td><form method="post" action="/scopes" class="inline"><input type="hidden" name="name" value="{{.Name}}"><input type="text" name="description" value="{{.Description}}" placeholder="Add a description" aria-label="Description of {{.Name}}"><button class="small">Save</button></form></td>
 <td class="num">{{.Tokens}}</td><td class="end">{{if eq .Tokens 0}}<form method="post" action="/scopes/{{.Name}}/delete"><button class="small danger">Delete</button></form>{{end}}</td></tr>{{end}}</tbody></table></div>
 <form method="post" action="/scopes" class="panel addrow"><h2>New scope</h2><div class="inline"><input type="text" name="name" placeholder="acme" aria-label="Name" required data-normalize><input type="text" name="description" placeholder="ACME customer systems" aria-label="Description"><button class="primary">Add scope</button></div></form>{{end}}

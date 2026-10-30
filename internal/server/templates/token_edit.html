@@ -1,4 +1,4 @@
-{{define "content"}}<header class="head">{{if .Edit}}<div><a class="back" href="/">Tokens</a><h1>{{.Token.Name}}</h1></div>{{else}}<div><a class="back" href="/">Tokens</a><h1>Add token</h1></div>{{end}}</header>
+{{define "content"}}<header class="head">{{if .Edit}}<div><a class="back" href="/tokens">Tokens</a><h1>{{.Token.Name}}</h1></div>{{else}}<div><a class="back" href="/tokens">Tokens</a><h1>Add token</h1></div>{{end}}</header>
 <form method="post" action="/tokens{{if .Edit}}/{{.Token.ID}}{{end}}" class="panel form" autocomplete="off">
 {{with .Error}}<p class="alert err">{{.}}</p>{{end}}
 <div class="grid2">
@@ -10,9 +10,11 @@
 <div class="field"><label for="f-value">Secret</label><textarea id="f-value" name="value" rows="3" class="mono" spellcheck="false" {{if not .Edit}}required{{end}} {{if .Edit}}placeholder="Leave empty to keep {{.Token.Masked}}"{{end}}>{{.Value}}</textarea></div>
 <div class="grid2">
 <div class="field"><label for="f-env">Env var for <code>tok exec</code></label><input type="text" id="f-env" name="env_name" class="mono" value="{{.Token.EnvName}}" placeholder="Default: name in UPPER_SNAKE" pattern="[A-Za-z_][A-Za-z0-9_]{0,63}" title="like ZABBIX_TOKEN"></div>
-<div class="field"><label for="f-exp">Expires</label><input type="date" id="f-exp" name="expires_at" value="{{date .Token.ExpiresAt}}"><p class="hint">Optional. Agents see the date; uses after it are refused.</p></div>
+<div class="field"><label for="f-exp">Expires</label><input type="date" id="f-exp" name="expires_at" value="{{date .Token.ExpiresAt}}" {{if .Edit}}data-base="{{date .Token.CreatedAt}}"{{end}}>
+<div class="quick" role="group" aria-label="Set expiry {{if .Edit}}from the date added{{else}}from today{{end}}"><button type="button" class="small" data-expire="1d">1 day</button><button type="button" class="small" data-expire="7d">1 week</button><button type="button" class="small" data-expire="1m">1 month</button><button type="button" class="small" data-expire="1y">1 year</button><button type="button" class="small quiet" data-expire="">None</button></div>
+<p class="hint">{{if .Edit}}Quick picks count from the date added, {{date .Token.CreatedAt}}.{{else}}Quick picks count from today.{{end}} Agents see the date; uses after it are refused.</p></div>
 </div>
 <label class="check"><input type="checkbox" name="needs_approval" {{if .Token.NeedsApproval}}checked{{end}}><span><b>Each use needs my approval</b><span class="hint">The agent gets a link. You confirm with passkey or password and choose how long this machine may keep using the token: 5, 15 or 60 min.</span></span></label>
-<div class="actions"><button class="primary">{{if .Edit}}Save changes{{else}}Add token{{end}}</button><a class="btn" href="/">Cancel</a></div></form>
+<div class="actions"><button class="primary">{{if .Edit}}Save changes{{else}}Add token{{end}}</button><a class="btn" href="/tokens">Cancel</a></div></form>
 {{if .Edit}}<section class="block"><h2>Recent events</h2>{{template "eventtable" .Events}}</section>
 <form method="post" action="/tokens/{{.Token.ID}}/delete" class="danger-zone" onsubmit="return confirm('Delete {{.Token.Name}}? The event log is kept.')"><div><h2>Delete token</h2><p class="sub">Agents lose access right away. Its events stay in the log.</p></div><button class="danger">Delete {{.Token.Name}}</button></form>{{end}}{{end}}

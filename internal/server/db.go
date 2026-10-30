@@ -285,6 +285,7 @@ func (db *DB) logEvent(e Event) {
 
 type EventFilter struct {
 	Token, Scope, Kind, Host string
+	Kinds                    []string
 	LoginID                  int64
 	Limit                    int
 }
@@ -296,6 +297,12 @@ func (db *DB) events(f EventFilter) ([]Event, error) {
 		if v != "" {
 			q += ` AND ` + col + `=?`
 			args = append(args, v)
+		}
+	}
+	if len(f.Kinds) > 0 {
+		q += ` AND kind IN (?` + strings.Repeat(`,?`, len(f.Kinds)-1) + `)`
+		for _, k := range f.Kinds {
+			args = append(args, k)
 		}
 	}
 	if f.LoginID != 0 {
@@ -325,6 +332,63 @@ func (db *DB) events(f EventFilter) ([]Event, error) {
 			e.LoginID = &lid.Int64
 		}
 		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
+// usedTokens counts existing tokens with at least one use since t.
+func (db *DB) usedTokens(since time.Time) (n int) {
+	_ = db.QueryRow(`SELECT count(DISTINCT token) FROM events WHERE kind='use' AND ts>=? AND token IN (SELECT name FROM tokens)`, since.Unix()).Scan(&n)
+	return n
+}
+
+func (db *DB) countEvents(kind string, since time.Time) (n int) {
+	_ = db.QueryRow(`SELECT count(*) FROM events WHERE kind=? AND ts>=?`, kind, since.Unix()).Scan(&n)
+	return n
+}
+
+// dailyUses returns use counts per day for days days ending today; index 0 is the oldest day.
+func (db *DB) dailyUses(start time.Time, days int) ([]int, error) {
+	out := make([]int, days)
+	// chisle: fixed 86400 s buckets, so a DST change shifts one hour of uses into the neighbouring day
+	rows, err := db.Query(`SELECT (ts-?)/86400, count(*) FROM events WHERE kind='use' AND ts>=? GROUP BY 1`, start.Unix(), start.Unix())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var d, n int
+		if err := rows.Scan(&d, &n); err != nil {
+			return nil, err
+		}
+		if d >= 0 && d < days {
+			out[d] = n
+		}
+	}
+	return out, rows.Err()
+}
+
+type TokenUse struct {
+	Name        string
+	Uses, Hosts int
+	Last        time.Time
+}
+
+func (db *DB) topTokens(since time.Time, limit int) ([]TokenUse, error) {
+	rows, err := db.Query(`SELECT token, count(*), count(DISTINCT host), max(ts) FROM events WHERE kind='use' AND ts>=? GROUP BY token ORDER BY 2 DESC, 4 DESC LIMIT ?`, since.Unix(), limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []TokenUse
+	for rows.Next() {
+		var u TokenUse
+		var last int64
+		if err := rows.Scan(&u.Name, &u.Uses, &u.Hosts, &last); err != nil {
+			return nil, err
+		}
+		u.Last = time.Unix(last, 0)
+		out = append(out, u)
 	}
 	return out, rows.Err()
 }

@@ -4,7 +4,8 @@
 <body class="{{if .LoggedIn}}app{{else}}solo{{end}}">
 {{if .LoggedIn}}<aside class="side"><a class="brand" href="/">{{template "mark"}}tokd</a>
 <nav aria-label="Main">
-<a href="/" {{if eq .Page "tokens"}}aria-current="page"{{end}}>Tokens</a>
+<a href="/" {{if eq .Page "dashboard"}}aria-current="page"{{end}}>Overview</a>
+<a href="/tokens" {{if or (eq .Page "tokens") (eq .Page "token_edit")}}aria-current="page"{{end}}>Tokens</a>
 <a href="/scopes" {{if eq .Page "scopes"}}aria-current="page"{{end}}>Scopes</a>
 <a href="/events" {{if eq .Page "events"}}aria-current="page"{{end}}>Events</a>
 <a href="/logins" {{if eq .Page "logins"}}aria-current="page"{{end}}>Logins</a>

@@ -1,5 +1,5 @@
 {{define "content"}}<header class="head"><h1>Tokens</h1><a class="btn primary" href="/tokens/new{{if .Scope}}?scope={{.Scope}}{{end}}">Add token</a></header>
-<nav class="seg" aria-label="Filter by scope"><a href="/" {{if not .Scope}}aria-current="page"{{end}}>All</a>{{range .Scopes}}<a href="/?scope={{.Name}}" {{if eq $.Scope .Name}}aria-current="page"{{end}}><i class="hole {{sc .Name}}"></i>{{.Name}}<span class="n">{{.Tokens}}</span></a>{{end}}</nav>
+<nav class="seg" aria-label="Filter by scope"><a href="/tokens" {{if not .Scope}}aria-current="page"{{end}}>All</a>{{range .Scopes}}<a href="/tokens?scope={{.Name}}" {{if eq $.Scope .Name}}aria-current="page"{{end}}><i class="hole {{sc .Name}}"></i>{{.Name}}<span class="n">{{.Tokens}}</span></a>{{end}}</nav>
 {{if .Tokens}}<div class="tablewrap"><table class="tokens"><thead><tr><th>Token</th><th>What it is</th><th>Secret</th><th>Last used</th><th>Expires</th></tr></thead><tbody>
 {{range .Tokens}}<tr class="{{sc .Scope}}">
 <td class="tok"><div class="meta"><a class="name" href="/tokens/{{.ID}}" title="Scope: {{.Scope}}">{{.Name}}</a>{{if .NeedsApproval}}<span class="kind warn" title="Each use needs your approval">approval</span>{{end}}</div>

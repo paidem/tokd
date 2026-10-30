@@ -126,3 +126,17 @@ const normalizeName = s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLo
 document.addEventListener('change', ev => {
   if (ev.target.matches('input[data-normalize]')) ev.target.value = normalizeName(ev.target.value);
 });
+
+// Expiry quick picks: offset from the date added (data-base) on existing tokens, from today on new ones.
+document.addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-expire]');
+  if (!btn) return;
+  const input = document.getElementById('f-exp'), x = btn.dataset.expire;
+  if (!x) { input.value = ''; return; }
+  const d = input.dataset.base ? new Date(input.dataset.base + 'T00:00') : new Date();
+  const n = parseInt(x, 10);
+  if (x.endsWith('d')) d.setDate(d.getDate() + n);
+  else if (x.endsWith('m')) d.setMonth(d.getMonth() + n);
+  else d.setFullYear(d.getFullYear() + n);
+  input.value = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD in local time
+});
