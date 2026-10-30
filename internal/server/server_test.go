@@ -170,6 +170,11 @@ func TestFlow(t *testing.T) {
 			t.Errorf("detectAgent(%q) = %q, want %q", in, got, want)
 		}
 	}
+	for _, path := range []string{"/favicon.ico", "/static/brand/favicon.svg", "/static/brand/site.webmanifest"} {
+		if r, err := http.Get(ts.URL + path); err != nil || r.StatusCode != 200 {
+			t.Fatalf("GET %s: %v %v", path, err, r)
+		}
+	}
 	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
 		if top, step := niceScale(peak); top != want[0] || step != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)

@@ -1,4 +1,9 @@
-# tokd
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/tokd-logo-dark.svg">
+    <img src="assets/brand/tokd-logo-light.svg" alt="tokd" height="72">
+  </picture>
+</h1>
 
 A small, single-user token store for AI agents. You keep API tokens and passwords in one place. Agents can list them and use them, but they must give a reason each time, and every use is logged. Tokens you mark as sensitive need your approval (passkey or password) before each use window.
 

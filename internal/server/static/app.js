@@ -153,3 +153,17 @@ document.addEventListener('click', ev => {
   else if (ev.target.tagName === 'DIALOG') ev.target.close();
 });
 
+// Theme switch: "auto" follows the OS (no data-theme), light/dark are remembered in localStorage.
+function markTheme() {
+  const t = document.documentElement.dataset.theme || 'auto';
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.setAttribute('aria-pressed', b.dataset.themeSet === t));
+}
+document.addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-theme-set]');
+  if (!btn) return;
+  const t = btn.dataset.themeSet;
+  if (t === 'auto') { delete document.documentElement.dataset.theme; localStorage.removeItem('theme'); }
+  else { document.documentElement.dataset.theme = t; localStorage.setItem('theme', t); }
+  markTheme();
+});
+markTheme();

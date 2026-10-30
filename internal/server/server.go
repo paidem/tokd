@@ -197,6 +197,9 @@ func (s *Server) routes() http.Handler {
 	m.HandleFunc("POST /passkeys/finish", s.withSession(s.passkeyRegisterFinish))
 	m.HandleFunc("POST /passkeys/{id}/delete", s.withSession(s.doPasskeyDelete))
 	m.Handle("GET /static/", http.FileServerFS(staticFS))
+	m.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFileFS(w, r, staticFS, "static/brand/favicon.ico")
+	})
 	m.Handle("GET /dl/", http.StripPrefix("/dl/", http.FileServerFS(os.DirFS(s.cfg.Downloads))))
 	m.HandleFunc("GET /install", s.pageInstall)
 	m.HandleFunc("GET /install.sh", s.installScript)

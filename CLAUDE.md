@@ -6,6 +6,7 @@ Single-user token store for AI agents: `tokd` server (Go, SQLite, server-rendere
 - `cmd/tokd` server entry, `cmd/tok` client (stdlib only; keep it that way so it cross-compiles everywhere).
 - `internal/server`: `db.go` schema + queries, `crypto.go` AES-GCM/mask/codes, `auth.go` password + passkeys + sessions + bearer logins, `api.go` CLI API, `web.go` admin pages, `install.go` /install + /dl, `templates/*.html` (layout.html holds shared blocks), `static/app.js` (passkey ceremonies, confirm forms).
 - `skills/tok/SKILL.md` agent skill, also served at /dl/SKILL.md.
+- `assets/brand/` logo kit (lime #A3D635, graphite #202522) for the README and GitHub; the app serves its own copies from `internal/server/static/brand/` (embed can't reach outside the package). The in-app logo is inline SVG in layout.html so it follows the theme.
 - `deploy/tailscale/` compose with a Tailscale sidecar node.
 
 ## Work
