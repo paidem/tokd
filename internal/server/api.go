@@ -72,7 +72,7 @@ func (s *Server) apiDevicePoll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) apiWhoami(w http.ResponseWriter, r *http.Request, l *Login) {
-	writeJSON(w, 200, map[string]any{"login_id": l.ID, "host": l.Host, "scopes": l.Scopes, "created_at": l.CreatedAt, "expires_at": l.ExpiresAt, "server": s.cfg.URL})
+	writeJSON(w, 200, map[string]any{"login_id": l.ID, "host": l.Host, "scopes": l.Scopes, "created_at": l.CreatedAt, "expires_at": l.ExpiresAt, "server": s.cfg.URL, "version": Version})
 }
 
 func (s *Server) apiLogout(w http.ResponseWriter, r *http.Request, l *Login) {

@@ -32,6 +32,7 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
                                 needs the owner's approval in the browser
   tok wait REQUEST_ID           block until an approval is decided
   tok version                   print the client version and build time
+  tok update [--force]          install the latest tok release from GitHub
 
 Every exec/get is logged on the server with the reason, host, directory and
 command. Tokens marked "needs approval" print an approval link and exit 3;
@@ -156,7 +157,24 @@ func call(c *config, method, path string, in, out any) error {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Printf("%s\n%s\n\n%s", versionLine(), loginLine(), usage)
+		fmt.Println(versionLine())
+		fmt.Println(loginLine())
+		sv := ""
+		if c, err := loadConfig(); err == nil && c.Token != "" && time.Now().Before(c.ExpiresAt) {
+			var reachable bool
+			switch sv, reachable = serverVersion(c); {
+			case !reachable:
+				fmt.Println("Server not reachable right now.")
+			case sv == "":
+				fmt.Println("Server runs a tokd too old to report its version.")
+			default:
+				fmt.Println("Server runs tokd " + sv + ".")
+			}
+		}
+		for _, n := range updateNotes(sv) {
+			fmt.Println("Update: " + n)
+		}
+		fmt.Print("\n" + usage)
 		return
 	}
 	var err error
@@ -178,7 +196,12 @@ func main() {
 		err = cmdWait(args)
 	case "version", "--version":
 		fmt.Println(versionLine())
+		for _, n := range updateNotes("") {
+			fmt.Println("Update: " + n)
+		}
 		return
+	case "update":
+		err = cmdUpdate(args)
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return
@@ -353,16 +376,39 @@ func cmdStatus() error {
 		Scopes    []string  `json:"scopes"`
 		CreatedAt time.Time `json:"created_at"`
 		ExpiresAt time.Time `json:"expires_at"`
+		Version   string    `json:"version"`
 	}
 	if err := call(c, "GET", "/api/whoami", nil, &who); err != nil {
 		return err
 	}
-	fmt.Printf("server  %s\nlogin   #%d as %s\nscopes  %s\n", c.Server, who.LoginID, who.Host, strings.Join(who.Scopes, ", "))
+	fmt.Printf("server  %s\n", c.Server)
+	if who.Version != "" { // older servers don't send it
+		fmt.Printf("version tokd %s\n", who.Version)
+	}
+	fmt.Printf("login   #%d as %s\nscopes  %s\n", who.LoginID, who.Host, strings.Join(who.Scopes, ", "))
 	if !who.CreatedAt.IsZero() { // older servers don't send it
 		fmt.Printf("since   %s\n", who.CreatedAt.Local().Format("2006-01-02 15:04"))
 	}
 	fmt.Printf("expires %s (in %s)\n", who.ExpiresAt.Local().Format("2006-01-02 15:04"), time.Until(who.ExpiresAt).Round(time.Minute))
+	for _, n := range updateNotes(who.Version) {
+		fmt.Println("update  " + n)
+	}
 	return nil
+}
+
+// serverVersion asks the server for its version with a short timeout. ok is false if the server
+// can't be reached; version is "" for servers too old to report it.
+func serverVersion(c *config) (version string, ok bool) {
+	saved := httpc.Timeout
+	httpc.Timeout = 3 * time.Second
+	defer func() { httpc.Timeout = saved }()
+	var who struct {
+		Version string `json:"version"`
+	}
+	if call(c, "GET", "/api/whoami", nil, &who) != nil {
+		return "", false
+	}
+	return who.Version, true
 }
 
 type tokenInfo struct {

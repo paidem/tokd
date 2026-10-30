@@ -175,6 +175,10 @@ func TestFlow(t *testing.T) {
 			t.Fatalf("GET %s: %v %v", path, err, r)
 		}
 	}
+	var who map[string]any
+	if js(http.DefaultClient, bearer, "/api/whoami", nil, &who); who["version"] != Version {
+		t.Fatalf("whoami version = %v, want %q", who["version"], Version)
+	}
 	// a reveal (value shown to an agent) needs a fresh approval each time, even without needs_approval
 	reveal := func() (int, map[string]any) {
 		var out map[string]any
