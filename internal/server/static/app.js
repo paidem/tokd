@@ -167,3 +167,13 @@ document.addEventListener('click', ev => {
   markTheme();
 });
 markTheme();
+
+// Copy buttons next to commands (install page).
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('button[data-copytext]');
+  if (!btn) return;
+  try {
+    await navigator.clipboard.writeText(btn.parentElement.querySelector('pre').textContent.trim());
+    btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1500);
+  } catch (e) { alert('Copy failed: ' + e.message); }
+});

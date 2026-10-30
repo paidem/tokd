@@ -175,6 +175,17 @@ func TestFlow(t *testing.T) {
 			t.Fatalf("GET %s: %v %v", path, err, r)
 		}
 	}
+	// a one-year login is allowed by default; revoked logins can be cleaned up
+	var start2 map[string]any
+	js(http.DefaultClient, "", "/api/device/start", map[string]string{"host": "yearhost"}, &start2)
+	if st := js(web, "", "/device/"+start2["user_code"].(string), map[string]any{"password": pw, "scopes": []string{"acme"}, "hours": 24 * 365}, nil); st != 200 {
+		t.Fatalf("one-year login refused: %d", st)
+	}
+	form("/logins/1/revoke", url.Values{})
+	form("/logins/cleanup", url.Values{})
+	if ls, _ := s.db.logins(); len(ls) != 1 || ls[0].Host != "yearhost" {
+		t.Fatalf("cleanup should leave only the active login, got %d", len(ls))
+	}
 	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
 		if top, step := niceScale(peak); top != want[0] || step != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)

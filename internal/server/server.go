@@ -188,6 +188,8 @@ func (s *Server) routes() http.Handler {
 	m.HandleFunc("GET /events", s.withSession(s.pageEvents))
 	m.HandleFunc("GET /logins", s.withSession(s.pageLogins))
 	m.HandleFunc("POST /logins/{id}/revoke", s.withSession(s.doLoginRevoke))
+	m.HandleFunc("POST /logins/{id}/delete", s.withSession(s.doLoginDelete))
+	m.HandleFunc("POST /logins/cleanup", s.withSession(s.doLoginCleanup))
 	m.HandleFunc("GET /settings", s.withSession(s.pageSettings))
 	m.HandleFunc("POST /settings", s.withSession(s.doSettings))
 	m.HandleFunc("POST /settings/password", s.withSession(s.doPassword))
@@ -269,7 +271,7 @@ func (s *Server) intSetting(k string, def int) int {
 }
 
 func (s *Server) loginDefaultHours() int { return s.intSetting("login_default_hours", 24) }
-func (s *Server) loginMaxHours() int     { return s.intSetting("login_max_hours", 168) }
+func (s *Server) loginMaxHours() int     { return s.intSetting("login_max_hours", 24*365) }
 
 // eventRetentionDays: events older than this are deleted; 0 keeps them forever.
 func (s *Server) eventRetentionDays() int { return s.intSetting("event_retention_days", 0) }

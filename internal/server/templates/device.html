@@ -3,6 +3,6 @@
 <p class="ask"><b>{{.Device.Host}}</b> wants to log in</p>
 <div class="code mono">{{.Device.UserCode}}</div><p class="sub center">Check that this matches the code tok printed. Requested {{when .Device.Created}}.</p>
 <fieldset class="choice"><legend>Scopes this machine may use</legend>{{range .Scopes}}<label class="check"><input type="checkbox" name="scopes" value="{{.Name}}"><span><span class="tag {{sc .Name}}">{{.Name}}</span> <span class="sub">{{.Description}} ({{.Tokens}} token{{if ne .Tokens 1}}s{{end}})</span></span></label>{{end}}</fieldset>
-<div class="field"><label for="d-hours">Stay logged in for</label><select id="d-hours" name="hours" data-int>{{range .Hours}}<option value="{{.}}" {{if eq . $.DefaultHours}}selected{{end}}>{{if lt . 24}}{{.}} h{{else if eq . 24}}1 day{{else}}{{div . 24}} days{{end}}</option>{{end}}</select></div>
+<div class="field"><label for="d-hours">Stay logged in for</label><select id="d-hours" name="hours" data-int>{{range .Hours}}<option value="{{.}}" {{if eq . $.DefaultHours}}selected{{end}}>{{if lt . 24}}{{.}} h{{else if eq . 24}}1 day{{else if eq . 8760}}1 year{{else}}{{div . 24}} days{{end}}</option>{{end}}</select></div>
 {{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Approve")}}
 <div class="actions"><button class="danger quiet wide" data-method="deny">Deny</button></div><p class="msg" role="status"></p></form>{{end}}{{end}}

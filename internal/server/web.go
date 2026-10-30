@@ -259,7 +259,7 @@ func (s *Server) pageDevice(w http.ResponseWriter, r *http.Request) {
 	d := s.findDevice(code)
 	scopes, _ := s.db.scopes()
 	var hours []int
-	for _, h := range []int{1, 8, 24, 72, 168, 336, 720} {
+	for _, h := range []int{1, 8, 24, 72, 168, 336, 720, 24 * 365} {
 		if h <= s.loginMaxHours() {
 			hours = append(hours, h)
 		}
@@ -775,7 +775,29 @@ func (s *Server) pageLogins(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	s.render(w, r, "logins", map[string]any{"Logins": ls})
+	inactive := 0
+	for _, l := range ls {
+		if !l.Active() {
+			inactive++
+		}
+	}
+	s.render(w, r, "logins", map[string]any{"Logins": ls, "Inactive": inactive})
+}
+
+// doLoginDelete removes one expired or revoked login; active ones must be revoked first.
+func (s *Server) doLoginDelete(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if n := s.db.deleteInactiveLogins(id); n > 0 {
+		s.db.logEvent(Event{Kind: "login_removed", LoginID: &id})
+	}
+	http.Redirect(w, r, "/logins", http.StatusSeeOther)
+}
+
+func (s *Server) doLoginCleanup(w http.ResponseWriter, r *http.Request) {
+	if n := s.db.deleteInactiveLogins(0); n > 0 {
+		s.db.logEvent(Event{Kind: "login_removed", Detail: fmt.Sprintf("%d expired or revoked logins", n)})
+	}
+	http.Redirect(w, r, "/logins", http.StatusSeeOther)
 }
 
 func (s *Server) doLoginRevoke(w http.ResponseWriter, r *http.Request) {

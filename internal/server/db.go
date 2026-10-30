@@ -243,6 +243,17 @@ func (db *DB) loginByHash(hash string) (*Login, error) {
 	return l, err
 }
 
+// deleteInactiveLogins removes expired or revoked logins: the one with this id, or all of them for id 0.
+// Their events stay in the log.
+func (db *DB) deleteInactiveLogins(id int64) int64 {
+	res, err := db.Exec(`DELETE FROM logins WHERE (revoked_at IS NOT NULL OR expires_at<?) AND (?=0 OR id=?)`, time.Now().Unix(), id, id)
+	if err != nil {
+		return 0
+	}
+	n, _ := res.RowsAffected()
+	return n
+}
+
 func (db *DB) logins() ([]*Login, error) {
 	rows, err := db.Query(`SELECT ` + loginCols + ` FROM logins ORDER BY id DESC LIMIT 200`)
 	if err != nil {
