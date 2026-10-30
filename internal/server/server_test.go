@@ -145,6 +145,11 @@ func TestFlow(t *testing.T) {
 	if len(evs) != 2 || evs[0].Reason == "" || evs[0].Host != "testhost" {
 		t.Fatalf("events: %+v", evs)
 	}
+	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
+		if top, step := niceScale(peak); top != want[0] || step != want[1] {
+			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)
+		}
+	}
 	for in, want := range map[string]string{"Zabbix ACME api!": "zabbix_acme_api", " prod--db ": "prod--db", "a  b\tc": "a_b_c", "!!!": "", "Žalias raktas": "alias_raktas"} {
 		if got := normalizeName(in); got != want {
 			t.Errorf("normalizeName(%q) = %q, want %q", in, got, want)

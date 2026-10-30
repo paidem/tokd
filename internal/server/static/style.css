@@ -262,13 +262,18 @@ blockquote.reason{max-width:none;margin:18px 0;padding:14px 18px;border-left:3px
 .big small{font-size:18px;font-weight:600;color:var(--mut);letter-spacing:0}
 .stats span:not(.sub){font-weight:700;font-size:14px;margin-top:4px}
 .dash{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:20px;align-items:start}
-.dash-main .block{margin-top:28px}
+.dash+.block{margin-top:28px}
 .dash-side .panel{padding:20px 22px}
 .dash-side h2,.sect-head h2{font-size:15.5px}
 .dash-side h2{margin-bottom:12px}
 .sect-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
 .block .sect-head{margin-bottom:12px}
-.chart{display:flex;align-items:flex-end;height:140px;gap:2px;border-bottom:1px solid var(--line-strong)}
+.plot{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px}
+.yaxis{position:relative;height:140px;min-width:2ch;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.yaxis span{position:absolute;right:0;transform:translateY(50%);line-height:1}
+.chart{position:relative;display:flex;align-items:flex-end;height:140px;gap:2px;border-bottom:1px solid var(--line-strong)}
+.chart .grid{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+.plot .axis{grid-column:2}
 .chart .col{position:relative;flex:1;height:100%;display:flex;align-items:flex-end;cursor:default}
 .chart i{display:block;width:100%;min-height:0;background:var(--ink);opacity:.82;border-radius:4px 4px 0 0}
 .chart .col:hover i{background:var(--brass);opacity:1}
@@ -276,7 +281,7 @@ blockquote.reason{max-width:none;margin:18px 0;padding:14px 18px;border-left:3px
 .chart .col:first-child:hover::after{left:0;transform:none}
 .chart .col:last-child:hover::after{left:auto;right:0;transform:none}
 .axis{display:flex;justify-content:space-between;color:var(--mut);font-size:12.5px;margin-top:6px}
-.recent .reason{max-width:40ch}
+.recent .reason{max-width:none;width:55%}
 .recent td:nth-child(3),.recent td:nth-child(4){white-space:nowrap}
 .sub.err{color:var(--err)}.sub.warn{color:var(--brass)}
 .list .name{font-weight:700;text-decoration:none}

@@ -398,12 +398,15 @@ func (s *Server) pageDashboard(w http.ResponseWriter, r *http.Request) {
 	for _, n := range counts {
 		peak = max(peak, n)
 	}
+	axisTop, step := niceScale(peak)
 	chart := make([]dayUses, days)
 	for i, n := range counts {
-		chart[i] = dayUses{Day: start.AddDate(0, 0, i), N: n}
-		if peak > 0 {
-			chart[i].Pct = n * 100 / peak
-		}
+		chart[i] = dayUses{Day: start.AddDate(0, 0, i), N: n, Pct: n * 100 / axisTop}
+	}
+	type tick struct{ V, Pct int }
+	var ticks []tick
+	for v := 0; v <= axisTop; v += step {
+		ticks = append(ticks, tick{v, v * 100 / axisTop})
 	}
 
 	top, _ := s.db.topTokens(monthAgo, 6)
@@ -439,8 +442,20 @@ func (s *Server) pageDashboard(w http.ResponseWriter, r *http.Request) {
 		"Pending": pending, "Tokens": len(toks), "NeedApproval": approval,
 		"Used7": s.db.usedTokens(weekAgo), "Used30": s.db.usedTokens(monthAgo),
 		"Uses30": s.db.countEvents("use", monthAgo), "Denied30": s.db.countEvents("denied", monthAgo) + s.db.countEvents("approval_denied", monthAgo),
-		"Active": active, "Chart": chart, "Peak": peak, "Top": topRows, "Attention": attn, "Recent": recent,
+		"Active": active, "Chart": chart, "Ticks": ticks, "Top": topRows, "Attention": attn, "Recent": recent,
 	})
+}
+
+// niceScale picks an axis maximum and tick step (1, 2 or 5 times a power of ten)
+// giving at most four steps above zero that cover peak.
+func niceScale(peak int) (top, step int) {
+	for mag := 1; ; mag *= 10 {
+		for _, m := range []int{1, 2, 5} {
+			if step = m * mag; peak <= 4*step {
+				return max(step, (peak+step-1)/step*step), step
+			}
+		}
+	}
 }
 
 func plural(n int) string {

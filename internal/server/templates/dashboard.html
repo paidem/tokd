@@ -9,13 +9,10 @@
 </div>
 <div class="dash">
 <div class="dash-main">
-<section class="panel"><div class="sect-head"><h2>Uses per day</h2><span class="sub">Last 30 days, peak {{.Peak}}</span></div>
-<div class="chart" role="list" aria-label="Token uses per day, last 30 days">{{range .Chart}}<div class="col" role="listitem" aria-label="{{.Day.Format "Jan 2"}}: {{.N}} use{{if ne .N 1}}s{{end}}" data-tip="{{.Day.Format "Mon Jan 2"}}: {{.N}}"><i style="height:{{.Pct}}%"></i></div>{{end}}</div>
-<div class="axis"><span>{{(index .Chart 0).Day.Format "Jan 2"}}</span><span>Today</span></div></section>
-<section class="block"><div class="sect-head"><h2>Recent requests</h2><a class="sub" href="/events">All events</a></div>
-<div class="tablewrap"><table class="recent"><thead><tr><th>When</th><th>Result</th><th>Token</th><th>Host</th><th>Reason</th></tr></thead><tbody>
-{{range .Recent}}<tr><td class="time" title="{{when .TS}}">{{ago .TS}}</td><td>{{template "kind" .Kind}}</td><td {{with .Scope}}title="Scope: {{.}}"{{end}}>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}</td><td>{{.Host}}</td><td class="reason">{{.Reason}}</td></tr>
-{{else}}<tr><td colspan="5" class="empty">No requests yet. Agents appear here once they ask for a token with <code>tok</code>.</td></tr>{{end}}</tbody></table></div></section>
+<section class="panel"><div class="sect-head"><h2>Uses per day</h2><span class="sub">Last 30 days</span></div>
+<div class="plot"><div class="yaxis" aria-hidden="true">{{range .Ticks}}<span style="bottom:{{.Pct}}%">{{.V}}</span>{{end}}</div>
+<div class="chart" role="list" aria-label="Token uses per day, last 30 days">{{range .Ticks}}{{if .V}}<b class="grid" style="bottom:{{.Pct}}%"></b>{{end}}{{end}}{{range .Chart}}<div class="col" role="listitem" aria-label="{{.Day.Format "Jan 2"}}: {{.N}} use{{if ne .N 1}}s{{end}}" data-tip="{{.Day.Format "Mon Jan 2"}}: {{.N}}"><i style="height:{{.Pct}}%"></i></div>{{end}}</div>
+<div class="axis"><span>{{(index .Chart 0).Day.Format "Jan 2"}}</span><span>Today</span></div></div></section>
 </div>
 <div class="dash-side">
 <section class="panel"><h2>Needs attention</h2>
@@ -24,4 +21,8 @@
 <section class="panel"><h2>Most used, last 30 days</h2>
 {{if .Top}}<ol class="toplist">{{range .Top}}<li class="{{sc .Scope}}"><div class="row"><a href="/events?token={{.Name}}" title="Scope: {{.Scope}}">{{.Name}}</a><span class="num">{{.Uses}}</span></div><div class="meter"><i style="width:{{.Pct}}%"></i></div><div class="sub">{{.Hosts}} machine{{if ne .Hosts 1}}s{{end}}, last {{ago .Last}}</div></li>{{end}}</ol>
 {{else}}<p class="sub">No uses in the last 30 days.</p>{{end}}</section>
-</div></div>{{end}}
+</div></div>
+<section class="block"><div class="sect-head"><h2>Recent requests</h2><a class="sub" href="/events">All events</a></div>
+<div class="tablewrap"><table class="recent"><thead><tr><th>When</th><th>Result</th><th>Token</th><th>Host</th><th>Reason</th></tr></thead><tbody>
+{{range .Recent}}<tr><td class="time" title="{{when .TS}}">{{ago .TS}}</td><td>{{template "kind" .Kind}}</td><td {{with .Scope}}title="Scope: {{.}}"{{end}}>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}</td><td>{{.Host}}</td><td class="reason">{{.Reason}}</td></tr>
+{{else}}<tr><td colspan="5" class="empty">No requests yet. Agents appear here once they ask for a token with <code>tok</code>.</td></tr>{{end}}</tbody></table></div></section>{{end}}
