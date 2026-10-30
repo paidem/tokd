@@ -1,7 +1,7 @@
 {{define "content"}}<h1>{{if .Edit}}Edit {{.Token.Name}}{{else}}Add token{{end}}</h1>
 <form method="post" action="/tokens{{if .Edit}}/{{.Token.ID}}{{end}}" class="card" autocomplete="off">
 {{with .Error}}<p class="err">{{.}}</p>{{end}}
-<label>Name</label><input type="text" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,63}" title="letters (stored lowercase), digits, dot, dash, underscore; no spaces">
+<label>Name</label><input type="text" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required data-normalize> <span class="mut">lowercase; spaces and other symbols become _</span>
 <label>Scope</label><select name="scope">{{range .Scopes}}<option {{if eq .Name $.Token.Scope}}selected{{end}}>{{.Name}}</option>{{end}}</select> <a class="mut" href="/scopes">manage scopes</a>
 <label>What it is</label><textarea name="description" placeholder="Zabbix API token for zabbix.example.com, read-only user api-ro">{{.Token.Description}}</textarea>
 <label>When to use</label><textarea name="usage" placeholder="Querying ACME Zabbix hosts/problems. Needs the office VPN.">{{.Token.Usage}}</textarea>

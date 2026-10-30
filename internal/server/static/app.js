@@ -120,3 +120,9 @@ document.addEventListener('keydown', ev => {
   const btn = ev.target.closest('form[data-confirm]')?.querySelector('button[data-method=password]');
   if (btn) { ev.preventDefault(); btn.click(); }
 });
+
+// Names: same rules as normalizeName in web.go (plus accent stripping: Žalias -> zalias), applied when the field loses focus.
+const normalizeName = s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '_').replace(/^[._-]+|[._-]+$/g, '').slice(0, 64).replace(/[._-]+$/, '');
+document.addEventListener('change', ev => {
+  if (ev.target.matches('input[data-normalize]')) ev.target.value = normalizeName(ev.target.value);
+});

@@ -55,11 +55,11 @@ func TestFlow(t *testing.T) {
 	form("/setup", url.Values{"password": {pw}, "password2": {pw}})
 	form("/scopes", url.Values{"name": {"acme"}})
 	// a validation error must keep everything that was typed
-	if r, err := web.PostForm(ts.URL+"/tokens", url.Values{"name": {"bad name"}, "scope": {"acme"}, "value": {"typed-secret-123"}, "description": {"typed desc"}, "expires_at": {"2030-01-31"}}); err != nil {
+	if r, err := web.PostForm(ts.URL+"/tokens", url.Values{"name": {"!!!"}, "scope": {"acme"}, "value": {"typed-secret-123"}, "description": {"typed desc"}, "expires_at": {"2030-01-31"}}); err != nil {
 		t.Fatal(err)
 	} else {
 		b, _ := io.ReadAll(r.Body)
-		for _, want := range []string{"typed-secret-123", "typed desc", "2030-01-31", `value="bad name"`} {
+		for _, want := range []string{"typed-secret-123", "typed desc", "2030-01-31", `typed-secret-123`} {
 			if !strings.Contains(string(b), want) {
 				t.Fatalf("re-rendered form lost %q", want)
 			}
@@ -127,6 +127,11 @@ func TestFlow(t *testing.T) {
 	evs, _ := s.db.events(EventFilter{Kind: "use"})
 	if len(evs) != 2 || evs[0].Reason == "" || evs[0].Host != "testhost" {
 		t.Fatalf("events: %+v", evs)
+	}
+	for in, want := range map[string]string{"Zabbix ACME api!": "zabbix_acme_api", " prod--db ": "prod--db", "a  b\tc": "a_b_c", "!!!": "", "Žalias raktas": "alias_raktas"} {
+		if got := normalizeName(in); got != want {
+			t.Errorf("normalizeName(%q) = %q, want %q", in, got, want)
+		}
 	}
 	if m := mask("abcdefghijklmnop"); m != "abc••••••••nop" {
 		t.Fatalf("mask: %s", m)

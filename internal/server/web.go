@@ -374,6 +374,18 @@ func (s *Server) pageTokenEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 var validName = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
+
+var nameJunk = regexp.MustCompile(`[^a-z0-9._-]+`)
+
+// normalizeName turns "Zabbix ACME api!" into "zabbix_acme_api". Mirrored in static/app.js.
+func normalizeName(s string) string {
+	s = nameJunk.ReplaceAllString(strings.ToLower(strings.TrimSpace(s)), "_")
+	s = strings.Trim(s, "._-")
+	if len(s) > 64 {
+		s = strings.TrimRight(s[:64], "._-")
+	}
+	return s
+}
 var validEnv = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 
 func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
@@ -388,7 +400,7 @@ func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	t := &Token{
-		Name:          strings.TrimSpace(strings.ToLower(r.FormValue("name"))),
+		Name:          normalizeName(r.FormValue("name")),
 		Scope:         r.FormValue("scope"),
 		Description:   strings.TrimSpace(r.FormValue("description")),
 		Usage:         strings.TrimSpace(r.FormValue("usage")),
@@ -422,7 +434,7 @@ func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case !validName.MatchString(t.Name):
-		fail("Name: lowercase letters, digits, dot, dash, underscore (e.g. zabbix-acme-api).")
+		fail("Name is required (letters, digits, dot, dash, underscore).")
 		return
 	case t.EnvName != "" && !validEnv.MatchString(t.EnvName):
 		fail("Env var name must look like ZABBIX_TOKEN.")
@@ -525,7 +537,7 @@ func (s *Server) pageScopes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) doScopeSave(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimSpace(strings.ToLower(r.FormValue("name")))
+	name := normalizeName(r.FormValue("name"))
 	if !validName.MatchString(name) {
 		http.Redirect(w, r, "/scopes?error=Scope+name:+lowercase+letters,+digits,+dash", http.StatusSeeOther)
 		return
