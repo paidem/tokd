@@ -41,13 +41,15 @@ jobs:
           go-version-file: go.mod
 
       # The tok client only changes when these paths do; otherwise reuse the
-      # previous release's binaries (they keep reporting that release's version).
+      # previous release's binaries. TOK_VERSION names the version they report,
+      # so tok update compares against it rather than the release tag.
       - name: tok client binaries
         run: |
           prev=$(git describe --tags --abbrev=0 --match 'v*' "$VERSION^" 2>/dev/null || true)
           if [ -n "$prev" ] && git diff --quiet "$prev" "$VERSION" -- cmd/tok skills/tok go.mod go.sum Makefile \
              && gh release download "$prev" -D dist -p 'tok-*' -p SKILL.md; then
-            echo "tok unchanged since $prev: reusing its binaries"
+            gh release download "$prev" -D dist -p TOK_VERSION || echo "$prev" > dist/TOK_VERSION
+            echo "tok unchanged since $prev: reusing its $(cat dist/TOK_VERSION) binaries"
           else
             rm -rf dist
             make dist VERSION="$VERSION"

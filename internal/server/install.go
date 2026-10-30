@@ -12,7 +12,7 @@ func (s *Server) pageInstall(w http.ResponseWriter, r *http.Request) {
 	var files []string
 	entries, _ := fs.ReadDir(os.DirFS(s.cfg.Downloads), ".")
 	for _, e := range entries {
-		if !e.IsDir() {
+		if !e.IsDir() && e.Name() != "TOK_VERSION" { // TOK_VERSION is for tok update, not people
 			files = append(files, e.Name())
 		}
 	}

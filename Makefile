@@ -11,6 +11,7 @@ dist:
 	  CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -trimpath -ldflags="-s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME)" -o $(DIST)/tok-$$os-$$arch$$ext ./cmd/tok || exit 1; \
 	done
 	cp skills/tok/SKILL.md $(DIST)/SKILL.md
+	echo $(VERSION) > $(DIST)/TOK_VERSION
 
 test:
 	go test ./...
