@@ -89,10 +89,10 @@ document.addEventListener('click', async ev => {
   const btn = ev.target.closest('button[data-reveal]');
   if (!btn) return;
   const cell = document.getElementById('v' + btn.dataset.reveal);
-  if (btn.dataset.shown) { cell.textContent = cell.dataset.masked; delete btn.dataset.shown; btn.textContent = 'show'; return; }
+  if (btn.dataset.shown) { cell.textContent = cell.dataset.masked; delete btn.dataset.shown; btn.textContent = 'Show'; return; }
   try {
     const { value } = await postJSON('/tokens/' + btn.dataset.reveal + '/reveal', {});
-    cell.dataset.masked = cell.textContent; cell.textContent = value; btn.dataset.shown = 1; btn.textContent = 'hide';
+    cell.dataset.masked = cell.textContent; cell.textContent = value; btn.dataset.shown = 1; btn.textContent = 'Hide';
   } catch (e) { alert(e.message); }
 });
 
@@ -102,7 +102,7 @@ document.addEventListener('click', async ev => {
   try {
     const { value } = await postJSON('/tokens/' + btn.dataset.copy + '/reveal', {});
     await navigator.clipboard.writeText(value);
-    btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1500);
+    btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1500);
   } catch (e) { alert(e.message); }
 });
 

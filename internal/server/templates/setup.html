@@ -1,7 +1,7 @@
-{{define "content"}}<h1>Set up tokd</h1>
-<form method="post" action="/setup" class="card">
-<p>Single user, no username. This password is the fallback; add a passkey on the next page.</p>
-<label>Password (12+ characters)</label><input type="password" name="password" autocomplete="new-password" required>
-<label>Repeat</label><input type="password" name="password2" autocomplete="new-password" required>
-<p><button class="primary">Create</button></p>{{with .Error}}<p class="err">{{.}}</p>{{end}}
+{{define "content"}}<form method="post" action="/setup" class="panel narrow">
+<h1>Set up tokd</h1><p class="lede">One user, no username. Choose a password now; it stays as the fallback once you add a passkey on the next page.</p>
+{{with .Error}}<p class="alert err">{{.}}</p>{{end}}
+<div class="field"><label for="p1">Password</label><input type="password" id="p1" name="password" autocomplete="new-password" minlength="12" required><p class="hint">At least 12 characters.</p></div>
+<div class="field"><label for="p2">Repeat password</label><input type="password" id="p2" name="password2" autocomplete="new-password" required></div>
+<div class="actions"><button class="primary wide">Create password</button></div>
 </form>{{end}}

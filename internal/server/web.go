@@ -3,6 +3,7 @@ package server
 import (
 	"embed"
 	"fmt"
+	"hash/fnv"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -23,6 +24,12 @@ var staticRoot embed.FS
 var staticFS fs.FS = staticRoot
 
 var funcs = template.FuncMap{
+	// sc maps a scope name to one of eight tag colours (s0..s7 in style.css), stable across pages.
+	"sc": func(scope string) string {
+		h := fnv.New32a()
+		h.Write([]byte(scope))
+		return fmt.Sprintf("s%d", h.Sum32()%8)
+	},
 	"when": func(t any) string {
 		switch v := t.(type) {
 		case time.Time:

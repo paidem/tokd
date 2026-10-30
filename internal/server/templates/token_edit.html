@@ -1,15 +1,18 @@
-{{define "content"}}<h1>{{if .Edit}}Edit {{.Token.Name}}{{else}}Add token{{end}}</h1>
-<form method="post" action="/tokens{{if .Edit}}/{{.Token.ID}}{{end}}" class="card" autocomplete="off">
-{{with .Error}}<p class="err">{{.}}</p>{{end}}
-<label>Name</label><input type="text" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required data-normalize> <span class="mut">lowercase; spaces and other symbols become _</span>
-<label>Scope</label><select name="scope">{{range .Scopes}}<option {{if eq .Name $.Token.Scope}}selected{{end}}>{{.Name}}</option>{{end}}</select> <a class="mut" href="/scopes">manage scopes</a>
-<label>What it is</label><textarea name="description" placeholder="Zabbix API token for zabbix.example.com, read-only user api-ro">{{.Token.Description}}</textarea>
-<label>When to use</label><textarea name="usage" placeholder="Querying ACME Zabbix hosts/problems. Needs the office VPN.">{{.Token.Usage}}</textarea>
-<label>Secret {{if .Edit}}<span class="mut">(leave empty to keep the current {{.Token.Masked}})</span>{{end}}</label>
-<textarea name="value" class="mono" spellcheck="false" {{if not .Edit}}required{{end}}>{{.Value}}</textarea>
-<label>Env var for <code>tok exec</code></label><input type="text" name="env_name" value="{{.Token.EnvName}}" placeholder="default: name in UPPER_SNAKE" pattern="[A-Za-z_][A-Za-z0-9_]{0,63}" title="like ZABBIX_TOKEN">
-<label>Expires <span class="mut">(optional; shown to agents, refused after)</span></label><input type="date" name="expires_at" value="{{date .Token.ExpiresAt}}">
-<label class="row"><input type="checkbox" name="needs_approval" {{if .Token.NeedsApproval}}checked{{end}}> Each use needs my approval <span class="mut">(the agent gets a link; you confirm with passkey or password and pick how long this machine may keep using it: 5, 15 or 60 min)</span></label>
-<p class="row"><button class="primary">Save</button> <a href="/">cancel</a></p></form>
-{{if .Edit}}<form method="post" action="/tokens/{{.Token.ID}}/delete" onsubmit="return confirm('Delete {{.Token.Name}}? The event log is kept.')"><button>Delete token</button></form>
-<h1 style="margin-top:1.5em">Recent events</h1>{{template "eventtable" .Events}}{{end}}{{end}}
+{{define "content"}}<header class="head">{{if .Edit}}<div><a class="back" href="/">Tokens</a><h1>{{.Token.Name}}</h1></div>{{else}}<div><a class="back" href="/">Tokens</a><h1>Add token</h1></div>{{end}}</header>
+<form method="post" action="/tokens{{if .Edit}}/{{.Token.ID}}{{end}}" class="panel form" autocomplete="off">
+{{with .Error}}<p class="alert err">{{.}}</p>{{end}}
+<div class="grid2">
+<div class="field"><label for="f-name">Name</label><input type="text" id="f-name" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required data-normalize><p class="hint">Lowercase. Spaces and other symbols become _</p></div>
+<div class="field"><label for="f-scope">Scope</label><select id="f-scope" name="scope">{{range .Scopes}}<option {{if eq .Name $.Token.Scope}}selected{{end}}>{{.Name}}</option>{{end}}</select><p class="hint"><a href="/scopes">Manage scopes</a></p></div>
+</div>
+<div class="field"><label for="f-desc">What it is</label><textarea id="f-desc" name="description" rows="2" placeholder="Zabbix API token for zabbix.example.com, read-only user api-ro">{{.Token.Description}}</textarea></div>
+<div class="field"><label for="f-usage">When to use</label><textarea id="f-usage" name="usage" rows="2" placeholder="Querying ACME Zabbix hosts/problems. Needs the office VPN.">{{.Token.Usage}}</textarea><p class="hint">Agents read both fields to pick the right token.</p></div>
+<div class="field"><label for="f-value">Secret</label><textarea id="f-value" name="value" rows="3" class="mono" spellcheck="false" {{if not .Edit}}required{{end}} {{if .Edit}}placeholder="Leave empty to keep {{.Token.Masked}}"{{end}}>{{.Value}}</textarea></div>
+<div class="grid2">
+<div class="field"><label for="f-env">Env var for <code>tok exec</code></label><input type="text" id="f-env" name="env_name" class="mono" value="{{.Token.EnvName}}" placeholder="Default: name in UPPER_SNAKE" pattern="[A-Za-z_][A-Za-z0-9_]{0,63}" title="like ZABBIX_TOKEN"></div>
+<div class="field"><label for="f-exp">Expires</label><input type="date" id="f-exp" name="expires_at" value="{{date .Token.ExpiresAt}}"><p class="hint">Optional. Agents see the date; uses after it are refused.</p></div>
+</div>
+<label class="check"><input type="checkbox" name="needs_approval" {{if .Token.NeedsApproval}}checked{{end}}><span><b>Each use needs my approval</b><span class="hint">The agent gets a link. You confirm with passkey or password and choose how long this machine may keep using the token: 5, 15 or 60 min.</span></span></label>
+<div class="actions"><button class="primary">{{if .Edit}}Save changes{{else}}Add token{{end}}</button><a class="btn" href="/">Cancel</a></div></form>
+{{if .Edit}}<section class="block"><h2>Recent events</h2>{{template "eventtable" .Events}}</section>
+<form method="post" action="/tokens/{{.Token.ID}}/delete" class="danger-zone" onsubmit="return confirm('Delete {{.Token.Name}}? The event log is kept.')"><div><h2>Delete token</h2><p class="sub">Agents lose access right away. Its events stay in the log.</p></div><button class="danger">Delete {{.Token.Name}}</button></form>{{end}}{{end}}

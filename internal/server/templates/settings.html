@@ -1,11 +1,19 @@
-{{define "content"}}<h1>Settings</h1>{{with .Msg}}<p class="ok">{{.}}</p>{{end}}
-<div class="card"><h3>Passkeys</h3>
-<table>{{range .Passkeys}}<tr><td>{{.Name}}</td><td class="mut">added {{when .CreatedAt}}, used {{ago .LastUsed}}</td><td><form method="post" action="/passkeys/{{.ID}}/delete"><button class="small">remove</button></form></td></tr>{{else}}<tr><td class="mut">None yet. Add one: approvals become a Touch ID / Face ID tap.</td></tr>{{end}}</table>
-<p class="row"><input type="text" id="pkname" placeholder="Laptop Touch ID"><button class="primary" data-register>Add passkey</button></p></div>
-<form method="post" action="/settings/default-scope" class="card"><h3>New tokens</h3>
-<div class="row"><label>Default scope for new tokens</label><select name="default_scope"><option value="">(none: first in list)</option>{{range .Scopes}}<option {{if eq .Name $.DefaultScope}}selected{{end}}>{{.Name}}</option>{{end}}</select><button>Save</button></div></form>
-<form method="post" action="/settings" class="card"><h3>tok login duration</h3>
-<div class="row"><label>Default hours</label><input type="number" name="login_default_hours" value="{{.DefaultHours}}" min="1"><label>Maximum hours</label><input type="number" name="login_max_hours" value="{{.MaxHours}}" min="1"><button>Save</button></div></form>
-<form method="post" action="/settings/password" class="card"><h3>Change password</h3>
-<label>Current</label><input type="password" name="current" autocomplete="current-password"><label>New (12+)</label><input type="password" name="password" autocomplete="new-password"><label>Repeat</label><input type="password" name="password2" autocomplete="new-password">
-<p><button>Change</button></p></form>{{end}}
+{{define "content"}}<header class="head"><h1>Settings</h1></header>{{with .Msg}}<p class="alert ok">{{.}}</p>{{end}}
+<div class="panel sections">
+<section class="setting"><div class="about"><h2>Passkeys</h2><p class="sub">Approvals and logins become a Touch ID or Face ID tap. The password stays as the fallback.</p></div>
+<div class="ctl">{{if .Passkeys}}<ul class="list">{{range .Passkeys}}<li><div><b>{{.Name}}</b><div class="sub">Added {{when .CreatedAt}}, used {{ago .LastUsed}}</div></div><form method="post" action="/passkeys/{{.ID}}/delete"><button class="small danger">Remove</button></form></li>{{end}}</ul>{{else}}<p class="sub">No passkeys yet.</p>{{end}}
+<div class="inline"><input type="text" id="pkname" placeholder="Laptop Touch ID" aria-label="Passkey name"><button class="primary" data-register>Add passkey</button></div></div></section>
+
+<section class="setting"><div class="about"><h2>New tokens</h2><p class="sub">The scope preselected on the Add token form.</p></div>
+<form method="post" action="/settings/default-scope" class="ctl inline"><select name="default_scope" aria-label="Default scope for new tokens"><option value="">None: first in list</option>{{range .Scopes}}<option {{if eq .Name $.DefaultScope}}selected{{end}}>{{.Name}}</option>{{end}}</select><button>Save</button></form></section>
+
+<section class="setting"><div class="about"><h2>tok login duration</h2><p class="sub">How long a machine stays logged in. You can choose up to the maximum when approving.</p></div>
+<form method="post" action="/settings" class="ctl"><div class="grid2"><div class="field"><label for="s-def">Default hours</label><input type="number" id="s-def" name="login_default_hours" value="{{.DefaultHours}}" min="1"></div>
+<div class="field"><label for="s-max">Maximum hours</label><input type="number" id="s-max" name="login_max_hours" value="{{.MaxHours}}" min="1"></div></div><div class="actions"><button>Save</button></div></form></section>
+
+<section class="setting"><div class="about"><h2>Password</h2><p class="sub">At least 12 characters.</p></div>
+<form method="post" action="/settings/password" class="ctl stack"><div class="field"><label for="p-cur">Current password</label><input type="password" id="p-cur" name="current" autocomplete="current-password"></div>
+<div class="field"><label for="p-new">New password</label><input type="password" id="p-new" name="password" autocomplete="new-password"></div>
+<div class="field"><label for="p-rep">Repeat new password</label><input type="password" id="p-rep" name="password2" autocomplete="new-password"></div>
+<div class="actions"><button>Change password</button></div></form></section>
+</div>{{end}}

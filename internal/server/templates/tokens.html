@@ -1,13 +1,12 @@
-{{define "content"}}<div class="row" style="justify-content:space-between"><h1>Tokens</h1><a href="/tokens/new{{if .Scope}}?scope={{.Scope}}{{end}}"><button class="primary">Add token</button></a></div>
-<div class="filters row"><span class="mut">Scope:</span> <a href="/">all</a>{{range .Scopes}} <a href="/?scope={{.Name}}" {{if eq $.Scope .Name}}style="font-weight:600"{{end}}>{{.Name}}</a> <span class="mut">({{.Tokens}})</span>{{end}}</div>
-<table><tr><th>Name</th><th>Scope</th><th>Description</th><th>Value</th><th>Added</th><th>Last used</th><th>Expires</th><th></th></tr>
-{{range .Tokens}}<tr>
-<td><a href="/tokens/{{.ID}}">{{.Name}}</a>{{if .NeedsApproval}} <span class="tag warn" title="each use needs your approval">approval</span>{{end}}<div class="mut mono">${{.EnvName}}</div></td>
-<td><span class="tag">{{.Scope}}</span></td>
-<td>{{.Description}}{{with .Usage}}<div class="mut">{{.}}</div>{{end}}</td>
-<td class="mono" id="v{{.ID}}">{{.Masked}}</td>
-<td class="mut">{{date .CreatedAt}}</td>
-<td class="mut">{{ago .LastUsedAt}}</td>
-<td class="{{if .Expired}}err{{else}}mut{{end}}">{{date .ExpiresAt}}</td>
-<td class="row"><button class="small" data-reveal="{{.ID}}">show</button><button class="small" data-copy="{{.ID}}">copy</button> <a class="mut" href="/events?token={{.Name}}">events</a></td>
-</tr>{{else}}<tr><td colspan="8" class="mut">No tokens yet.</td></tr>{{end}}</table>{{end}}
+{{define "content"}}<header class="head"><h1>Tokens</h1><a class="btn primary" href="/tokens/new{{if .Scope}}?scope={{.Scope}}{{end}}">Add token</a></header>
+<nav class="seg" aria-label="Filter by scope"><a href="/" {{if not .Scope}}aria-current="page"{{end}}>All</a>{{range .Scopes}}<a href="/?scope={{.Name}}" {{if eq $.Scope .Name}}aria-current="page"{{end}}><i class="hole {{sc .Name}}"></i>{{.Name}}<span class="n">{{.Tokens}}</span></a>{{end}}</nav>
+{{if .Tokens}}<div class="tablewrap"><table class="tokens"><thead><tr><th>Token</th><th>What it is</th><th>Secret</th><th>Last used</th><th>Expires</th></tr></thead><tbody>
+{{range .Tokens}}<tr class="{{sc .Scope}}">
+<td class="tok"><div class="meta"><a class="name" href="/tokens/{{.ID}}" title="Scope: {{.Scope}}">{{.Name}}</a>{{if .NeedsApproval}}<span class="kind warn" title="Each use needs your approval">approval</span>{{end}}</div>
+<code class="env">${{.EnvName}}</code></td>
+<td class="desc">{{.Description}}{{with .Usage}}<div class="sub">{{.}}</div>{{end}}</td>
+<td><div class="slot"><code id="v{{.ID}}">{{.Masked}}</code><button class="small" data-reveal="{{.ID}}">Show</button><button class="small" data-copy="{{.ID}}">Copy</button></div></td>
+<td class="when" data-label="Last used">{{ago .LastUsedAt}}<a class="sub" href="/events?token={{.Name}}">Events</a></td>
+<td class="when" data-label="Expires">{{with date .ExpiresAt}}{{.}}{{else}}<span class="sub">never</span>{{end}}{{if .Expired}} <span class="kind err">expired</span>{{end}}<div class="sub">Added {{date .CreatedAt}}</div></td>
+</tr>{{end}}</tbody></table></div>
+{{else}}<div class="empty-state"><p>{{if .Scope}}No tokens in <b>{{.Scope}}</b> yet.{{else}}No tokens yet.{{end}} Add one, then run <code>tok login</code> on the machine where your agents work.</p><a class="btn primary" href="/tokens/new{{if .Scope}}?scope={{.Scope}}{{end}}">Add token</a></div>{{end}}{{end}}

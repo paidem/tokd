@@ -1,6 +1,7 @@
-{{define "content"}}<h1>Logins</h1><p class="mut">Machines that ran <code>tok login</code>. Revoke to cut a machine off immediately.</p>
-<table><tr><th>#</th><th>Host</th><th>Scopes</th><th>Created</th><th>Expires</th><th>Last seen</th><th></th></tr>
-{{range .Logins}}<tr><td><a href="/events?login={{.ID}}">{{.ID}}</a></td><td>{{.Host}}</td><td>{{range .Scopes}}<span class="tag">{{.}}</span> {{end}}</td>
-<td class="mut">{{when .CreatedAt}}</td><td class="mut">{{when .ExpiresAt}}</td><td class="mut">{{ago .LastSeenAt}}</td>
-<td>{{if .Active}}<form method="post" action="/logins/{{.ID}}/revoke"><button class="small">revoke</button></form>{{else if .RevokedAt}}<span class="mut">revoked</span>{{else}}<span class="mut">expired</span>{{end}}</td></tr>
-{{else}}<tr><td colspan="7" class="mut">No logins yet. Run <code>tok login {{$.URL}}</code>.</td></tr>{{end}}</table>{{end}}
+{{define "content"}}<header class="head"><div><h1>Logins</h1><p class="lede">Machines that ran <code>tok login</code>. Revoke one to cut it off immediately.</p></div></header>
+<div class="tablewrap"><table><thead><tr><th>Host</th><th>Scopes</th><th>Status</th><th>Created</th><th>Expires</th><th>Last seen</th><th></th></tr></thead><tbody>
+{{range .Logins}}<tr><td><b>{{.Host}}</b> <a class="sub" href="/events?login={{.ID}}" title="Events from this login">#{{.ID}}</a></td><td class="tags">{{range .Scopes}}<span class="tag {{sc .}}">{{.}}</span>{{end}}</td>
+<td>{{if .Active}}<span class="kind ok">active</span>{{else if .RevokedAt}}<span class="kind err">revoked</span>{{else}}<span class="kind">expired</span>{{end}}</td>
+<td class="time">{{when .CreatedAt}}</td><td class="time">{{when .ExpiresAt}}</td><td class="time">{{ago .LastSeenAt}}</td>
+<td class="end">{{if .Active}}<form method="post" action="/logins/{{.ID}}/revoke" onsubmit="return confirm('Revoke {{.Host}}? It has to run tok login again.')"><button class="small danger">Revoke</button></form>{{end}}</td></tr>
+{{else}}<tr><td colspan="7" class="empty">No machines yet. Run <code>tok login {{$.URL}}</code> on one.</td></tr>{{end}}</tbody></table></div>{{end}}

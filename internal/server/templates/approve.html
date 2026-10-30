@@ -1,12 +1,12 @@
-{{define "content"}}<h1>Approve token use</h1>
-{{if not .Req}}<div class="card"><p class="err">Unknown request. Requests live 10 minutes and are lost on server restart.</p></div>
-{{else}}<form class="card" data-confirm="/approve/{{.Req.ID}}" data-ok-text="Approved. The agent continues on its own." onsubmit="return false">
-<dl><dt>Token</dt><dd><b>{{.Req.Token}}</b> <span class="tag">{{.Req.Scope}}</span>{{with .Token}}<div class="mut">{{.Description}}</div>{{end}}</dd>
-<dt>Reason</dt><dd><b>{{.Req.Reason}}</b></dd><dt>Host</dt><dd>{{.Req.Host}} <span class="mut">login #{{.Req.LoginID}}</span></dd>
-{{with .Req.Agent}}<dt>Agent</dt><dd class="mono">{{.}}</dd>{{end}}{{with .Req.Cwd}}<dt>Directory</dt><dd class="mono">{{.}}</dd>{{end}}
-{{with .Req.Cmd}}<dt>Command</dt><dd class="mono">{{.}}</dd>{{end}}<dt>Asked</dt><dd>{{when .Req.Created}}</dd></dl>
-{{if ne .Req.Status "pending"}}<p class="{{if eq .Req.Status "approved"}}ok{{else}}err{{end}}">Already {{.Req.Status}}.</p>
-{{else if .Expired}}<p class="err">Expired. The agent has to ask again.</p>
-{{else}}<label>Allow this host to use this token for</label><div class="row">{{range $i, $m := .Windows}}<label class="row" style="font-weight:400;margin:0"><input type="radio" name="minutes" value="{{$m}}" {{if eq $i 1}}checked{{end}}> {{$m}} min</label>{{end}}</div>
-<p></p>{{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Approve")}}<p><button data-method="deny">Deny</button></p>{{end}}
-<p class="msg"></p></form>{{end}}{{end}}
+{{define "content"}}{{if not .Req}}<div class="panel narrow"><h1>Request not found</h1><p class="lede">Requests live 10 minutes and are lost when the server restarts. Ask the agent to try again.</p></div>
+{{else}}<form class="panel narrow" data-confirm="/approve/{{.Req.ID}}" data-ok-text="Approved. The agent continues on its own." onsubmit="return false">
+<p class="ask"><b>{{.Req.Host}}</b> wants to use</p>
+<h1 class="tokname"><span class="tag {{sc .Req.Scope}}">{{.Req.Scope}}</span>{{.Req.Token}}</h1>{{with .Token}}<p class="sub">{{.Description}}</p>{{end}}
+<blockquote class="reason">{{.Req.Reason}}</blockquote>
+<dl class="facts">{{with .Req.Agent}}<dt>Agent</dt><dd class="mono">{{.}}</dd>{{end}}{{with .Req.Cwd}}<dt>Directory</dt><dd class="mono">{{.}}</dd>{{end}}
+{{with .Req.Cmd}}<dt>Command</dt><dd class="mono">{{.}}</dd>{{end}}<dt>Login</dt><dd>#{{.Req.LoginID}}</dd><dt>Asked</dt><dd>{{when .Req.Created}}</dd></dl>
+{{if ne .Req.Status "pending"}}<p class="alert {{if eq .Req.Status "approved"}}ok{{else}}err{{end}}">Already {{.Req.Status}}.</p>
+{{else if .Expired}}<p class="alert err">Expired. The agent has to ask again.</p>
+{{else}}<fieldset class="choice"><legend>Let this machine use it for</legend><div class="seg">{{range $i, $m := .Windows}}<label><input type="radio" name="minutes" value="{{$m}}" {{if eq $i 1}}checked{{end}}><span>{{$m}} min</span></label>{{end}}</div></fieldset>
+{{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Approve")}}<div class="actions"><button class="danger quiet wide" data-method="deny">Deny</button></div>{{end}}
+<p class="msg" role="status"></p></form>{{end}}{{end}}
