@@ -160,7 +160,7 @@ func main() {
 		return
 	}
 	var err error
-	code := 1
+	code := 0
 	switch cmd, args := os.Args[1], os.Args[2:]; cmd {
 	case "login":
 		err = cmdLogin(args)
