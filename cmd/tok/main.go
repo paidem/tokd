@@ -28,7 +28,8 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
                                 run COMMAND with the tokens in env vars;
                                 their values are masked in its output
   tok get --reason TEXT NAME    print a token value (prefer exec); under an
-                                agent it needs --reveal
+                                agent it needs --reveal, and every reveal
+                                needs the owner's approval in the browser
   tok wait REQUEST_ID           block until an approval is decided
   tok version                   print the client version and build time
 
@@ -467,9 +468,14 @@ type useResult struct {
 
 // use fetches one value; on "approval required" it waits when a human is at the terminal,
 // otherwise it returns the 202 error so the agent can show the link and retry.
-func use(c *config, name, reason, cmdline string) (*useResult, error) {
+// revealWait stays under the ~2 minute command timeout of agent shells.
+const revealWait = 100 * time.Second
+
+// use fetches a value. reveal marks that it will be shown to an agent: the server then always asks
+// the owner, so tok opens the approval page and waits briefly instead of only printing the link.
+func use(c *config, name, reason, cmdline string, reveal bool) (*useResult, error) {
 	cwd, _ := os.Getwd()
-	req := map[string]string{"name": name, "reason": reason, "cwd": cwd, "cmd": cmdline, "agent": agentInfo()}
+	req := map[string]any{"name": name, "reason": reason, "cwd": cwd, "cmd": cmdline, "agent": agentInfo(), "reveal": reveal}
 	for {
 		var res useResult
 		err := call(c, "POST", "/api/use", req, &res)
@@ -479,6 +485,20 @@ func use(c *config, name, reason, cmdline string) (*useResult, error) {
 		}
 		url, _ := ae.Body["approve_url"].(string)
 		id, _ := ae.Body["request_id"].(string)
+		if reveal {
+			if reused, _ := ae.Body["reused"].(bool); !reused {
+				openBrowser(url)
+			}
+			fmt.Fprintf(os.Stderr, "tok: showing %q to an agent needs the owner's approval: %s\ntok: waiting up to %s...\n", name, url, revealWait)
+			if err := waitFor(c, id, revealWait); err != nil {
+				if strings.HasPrefix(err.Error(), "request ") { // denied or expired
+					return nil, err
+				}
+				return nil, &apiError{Code: http.StatusAccepted, Msg: fmt.Sprintf(
+					"revealing %q needs approval. Ask the user to approve it in the opened tab (%s), then rerun this command.", name, url)}
+			}
+			continue
+		}
 		if !isTerminal(os.Stdin) || os.Getenv("CLAUDECODE") != "" || os.Getenv("AI_AGENT") != "" {
 			return nil, &apiError{Code: http.StatusAccepted, Msg: fmt.Sprintf(
 				"token %q needs approval. Show the user this link and ask them to approve:\n  %s\nThen run `tok wait %s` (blocks up to 10 min) or simply rerun this command after they confirm.",
@@ -557,7 +577,7 @@ func cmdGet(args []string) error {
 	if o.reveal {
 		cmdline = "tok get --reveal " + o.pos[0]
 	}
-	res, err := use(c, o.pos[0], o.reason, cmdline)
+	res, err := use(c, o.pos[0], o.reason, cmdline, o.reveal && agentEnv() != "")
 	if err != nil {
 		return err
 	}
@@ -582,7 +602,7 @@ func cmdExec(args []string) (int, error) {
 	var secrets []string
 	for _, spec := range o.pos {
 		name, envName, _ := strings.Cut(spec, "=")
-		res, err := use(c, name, o.reason, cmdline)
+		res, err := use(c, name, o.reason, cmdline, o.noRedact && agentEnv() != "")
 		if err != nil {
 			return 1, err
 		}

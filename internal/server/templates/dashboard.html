@@ -1,6 +1,6 @@
 {{define "content"}}<header class="head"><h1>Overview</h1><a class="btn primary" href="/tokens/new">Add token</a></header>
 {{with .Pending}}<section class="waiting" aria-label="Waiting for your approval"><h2>Waiting for you</h2>
-<ul>{{range .}}<li><div><b>{{.Host}}</b> wants <a href="/approve/{{.ID}}">{{.Token}}</a> <span class="tag {{sc .Scope}}">{{.Scope}}</span><div class="sub">{{.Reason}}</div></div><a class="btn primary small" href="/approve/{{.ID}}">Review</a></li>{{end}}</ul></section>{{end}}
+<ul>{{range .}}<li><div><b>{{.Host}}</b> {{if .Reveal}}wants to see the value of{{else}}wants{{end}} <a href="/approve/{{.ID}}">{{.Token}}</a> <span class="tag {{sc .Scope}}">{{.Scope}}</span><div class="sub">{{.Reason}}</div></div><a class="btn primary small" href="/approve/{{.ID}}">Review</a></li>{{end}}</ul></section>{{end}}
 <div class="panel stats">
 <div><b class="big">{{.Tokens}}</b><span>Tokens</span><span class="sub">{{if .NeedApproval}}{{.NeedApproval}} need approval per use{{else}}none need approval{{end}}</span></div>
 <div><b class="big">{{.Used7}}<small> / {{.Tokens}}</small></b><span>Used in the last 7 days</span><span class="sub">tokens with at least one use</span></div>

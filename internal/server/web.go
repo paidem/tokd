@@ -396,12 +396,17 @@ func (s *Server) doApprove(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, 404, "token no longer exists")
 		return
 	}
-	until := time.Now().Add(time.Duration(body.Minutes) * time.Minute)
-	s.mu.Lock()
-	ar.Status, ar.Until = "approved", until
-	s.grants[grantKey{ar.LoginID, t.ID}] = until
-	s.mu.Unlock()
 	ev.Kind, ev.Detail = "approved", fmt.Sprintf("%s for %d min", ar.ID, body.Minutes)
+	s.mu.Lock()
+	if ar.Reveal { // no window: the agent has requestTTL to collect this one value
+		ar.Status, ar.Until = "approved", time.Now().Add(requestTTL)
+		ev.Detail = ar.ID + ", one reveal"
+	} else {
+		until := time.Now().Add(time.Duration(body.Minutes) * time.Minute)
+		ar.Status, ar.Until = "approved", until
+		s.grants[grantKey{ar.LoginID, t.ID}] = until
+	}
+	s.mu.Unlock()
 	s.db.logEvent(ev)
 	writeJSON(w, 200, map[string]string{"ok": "approved"})
 }

@@ -175,6 +175,28 @@ func TestFlow(t *testing.T) {
 			t.Fatalf("GET %s: %v %v", path, err, r)
 		}
 	}
+	// a reveal (value shown to an agent) needs a fresh approval each time, even without needs_approval
+	reveal := func() (int, map[string]any) {
+		var out map[string]any
+		st := js(http.DefaultClient, bearer, "/api/use", map[string]any{"name": "zabbix-acme", "reason": "print it for the user who asked", "reveal": true}, &out)
+		return st, out
+	}
+	st, out = reveal()
+	if st != 202 || out["reveal"] != true {
+		t.Fatalf("reveal without approval: %d %v", st, out)
+	}
+	if st := js(web, "", "/approve/"+out["request_id"].(string), map[string]any{"password": pw}, nil); st != 200 {
+		t.Fatalf("approve reveal: %d", st)
+	}
+	if st, out := reveal(); st != 200 || out["value"] != "abcdefghijklmnop" {
+		t.Fatalf("reveal after approval: %d %v", st, out)
+	}
+	if st, _ := reveal(); st != 202 {
+		t.Fatalf("second reveal reused the approval: %d", st)
+	}
+	if st, _ := use("zabbix-acme", "plain use is unaffected by reveal"); st != 200 {
+		t.Fatalf("plain use after reveal: %d", st)
+	}
 	// a one-year login is allowed by default; revoked logins can be cleaned up
 	var start2 map[string]any
 	js(http.DefaultClient, "", "/api/device/start", map[string]string{"host": "yearhost"}, &start2)

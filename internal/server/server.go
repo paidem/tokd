@@ -102,6 +102,10 @@ type approvalRequest struct {
 	Expires time.Time
 	Status  string // pending | approved | denied
 	Until   time.Time
+	// Reveal: the value will be shown to an agent (tok get --reveal). Such a request is always
+	// needed, ignores approval windows, and an approval lets exactly one use collect it.
+	Reveal    bool
+	Collected bool
 }
 
 type grantKey struct {

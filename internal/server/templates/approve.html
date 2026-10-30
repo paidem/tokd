@@ -1,12 +1,12 @@
 {{define "content"}}{{if not .Req}}<div class="panel narrow"><h1>Request not found</h1><p class="lede">Requests live 10 minutes and are lost when the server restarts. Ask the agent to try again.</p></div>
 {{else}}<form class="panel narrow" data-confirm="/approve/{{.Req.ID}}" data-ok-text="Approved. The agent continues on its own." data-close onsubmit="return false">
-<p class="ask"><b>{{.Req.Host}}</b> wants to use</p>
+<p class="ask"><b>{{.Req.Host}}</b> {{if .Req.Reveal}}wants to see the raw value of{{else}}wants to use{{end}}</p>
 <h1 class="tokname"><span class="tag {{sc .Req.Scope}}">{{.Req.Scope}}</span>{{.Req.Token}}</h1>{{with .Token}}<p class="sub">{{.Description}}</p>{{end}}
 <blockquote class="reason">{{.Req.Reason}}</blockquote>
 <dl class="facts">{{with .Req.Agent}}<dt>Agent</dt><dd class="mono">{{range agentvars .}}<div>{{with index . 0}}{{.}}={{end}}{{index . 1}}</div>{{end}}</dd>{{end}}{{with .Req.Cwd}}<dt>Directory</dt><dd class="mono">{{.}}</dd>{{end}}
 {{with .Req.Cmd}}<dt>Command</dt><dd class="mono">{{.}}</dd>{{end}}<dt>Login</dt><dd>#{{.Req.LoginID}}</dd><dt>Asked</dt><dd>{{when .Req.Created}}</dd></dl>
 {{if ne .Req.Status "pending"}}<p class="alert {{if eq .Req.Status "approved"}}ok{{else}}err{{end}}">Already {{.Req.Status}}.</p>
 {{else if .Expired}}<p class="alert err">Expired. The agent has to ask again.</p>
-{{else}}<fieldset class="choice"><legend>Let this machine use it for</legend><div class="seg">{{range $i, $m := .Windows}}<label><input type="radio" name="minutes" value="{{$m}}" {{if eq $i 1}}checked{{end}}><span>{{$m}} min</span></label>{{end}}</div></fieldset>
+{{else}}{{if .Req.Reveal}}<p class="alert warn">The agent asked to print this secret, so it ends up in the agent's context and transcript. Approving allows this one reveal only.</p>{{else}}<fieldset class="choice"><legend>Let this machine use it for</legend><div class="seg">{{range $i, $m := .Windows}}<label><input type="radio" name="minutes" value="{{$m}}" {{if eq $i 1}}checked{{end}}><span>{{$m}} min</span></label>{{end}}</div></fieldset>{{end}}
 {{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Approve")}}<div class="actions"><button class="danger quiet wide" data-method="deny">Deny</button></div>{{end}}
 <p class="msg" role="status"></p></form>{{end}}{{end}}

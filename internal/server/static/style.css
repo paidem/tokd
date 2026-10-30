@@ -335,3 +335,4 @@ body.solo .top .end{display:flex;align-items:center;gap:12px}
 .cmd .term{margin:0;padding-right:84px}
 .cmd button{position:absolute;top:50%;right:12px;transform:translateY(-50%);background:color-mix(in srgb,var(--term-fg) 12%,transparent);border-color:color-mix(in srgb,var(--term-fg) 25%,transparent);color:var(--term-fg)}
 .cmd button:hover{background:color-mix(in srgb,var(--term-fg) 22%,transparent)}
+.alert.warn{background:color-mix(in srgb,var(--warn) 12%,transparent);color:var(--warn)}

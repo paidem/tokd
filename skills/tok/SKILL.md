@@ -31,7 +31,7 @@ tok exec --reason "list open Zabbix problems for ACME hosts, user asked why acme
 - Output is scanned and the value replaced by `[tok:redacted]`.
 - Exit code is the command's.
 
-`tok get --reason "..." NAME` prints the raw value, which puts it into your context. Under an agent tok refuses it unless you add `--reveal`. Add `--reveal` only when the user explicitly asked for the raw value or it must be written somewhere `exec` can't reach (e.g. a config file the user asked you to create), and never echo it into chat.
+`tok get --reason "..." NAME` prints the raw value, which puts it into your context. Under an agent tok refuses it unless you add `--reveal`, and every reveal needs the user's approval: tok opens the approval page in their browser and waits up to 100 seconds. If it gives up, tell the user to approve in the opened tab and rerun the same command (it reuses the request). The same applies to `tok exec --no-redact`. Add `--reveal` only when the user explicitly asked for the raw value or it must be written somewhere `exec` can't reach (e.g. a config file the user asked you to create), and never echo it into chat.
 
 ## 3. Reasons
 

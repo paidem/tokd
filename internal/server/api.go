@@ -112,6 +112,7 @@ type useRequest struct {
 	Cwd    string `json:"cwd"`
 	Cmd    string `json:"cmd"`
 	Agent  string `json:"agent"`
+	Reveal bool   `json:"reveal"` // the value will be shown to an agent; always needs a fresh approval
 }
 
 // POST /api/use — the only way to get a value. Every call is logged with its reason.
@@ -147,19 +148,31 @@ func (s *Server) apiUse(w http.ResponseWriter, r *http.Request, l *Login) {
 		deny(410, "token expired on "+t.ExpiresAt.Format("2006-01-02")+"; ask the owner for a new one")
 		return
 	}
-	if t.NeedsApproval {
+	if t.NeedsApproval || req.Reveal {
+		now := time.Now()
+		granted := false
 		s.mu.Lock()
-		until, granted := s.grants[grantKey{l.ID, t.ID}]
-		granted = granted && time.Now().Before(until)
+		if req.Reveal { // one approved reveal request allows one collection
+			for _, p := range s.requests {
+				if p.Reveal && p.LoginID == l.ID && p.Token == t.Name && p.Status == "approved" && !p.Collected && now.Before(p.Until) {
+					p.Collected, granted = true, true
+					ev.Detail = "reveal approved, " + p.ID
+					break
+				}
+			}
+		} else if until, ok := s.grants[grantKey{l.ID, t.ID}]; ok && now.Before(until) {
+			granted = true
+			ev.Detail = "approved until " + until.Format("15:04:05")
+		}
 		s.mu.Unlock()
 		if !granted {
 			ar := &approvalRequest{ID: randToken(12), LoginID: l.ID, Host: l.Host, Token: t.Name, Scope: t.Scope,
 				Reason: ev.Reason, Cwd: ev.Cwd, Cmd: ev.Cmd, Agent: ev.Agent,
-				Created: time.Now(), Expires: time.Now().Add(requestTTL), Status: "pending"}
+				Created: now, Expires: now.Add(requestTTL), Status: "pending", Reveal: req.Reveal}
 			s.mu.Lock()
 			reused := false
 			for _, p := range s.requests { // a retry while waiting reuses the open request
-				if p.LoginID == l.ID && p.Token == t.Name && p.Status == "pending" && time.Now().Before(p.Expires) {
+				if p.LoginID == l.ID && p.Token == t.Name && p.Reveal == req.Reveal && p.Status == "pending" && now.Before(p.Expires) {
 					ar, reused = p, true
 					break
 				}
@@ -170,6 +183,9 @@ func (s *Server) apiUse(w http.ResponseWriter, r *http.Request, l *Login) {
 			s.mu.Unlock()
 			if !reused {
 				ev.Kind, ev.Detail = "approval_requested", ar.ID
+				if ar.Reveal {
+					ev.Detail += " (reveal)"
+				}
 				s.db.logEvent(ev)
 			}
 			writeJSON(w, 202, map[string]any{
@@ -177,10 +193,11 @@ func (s *Server) apiUse(w http.ResponseWriter, r *http.Request, l *Login) {
 				"request_id":  ar.ID,
 				"approve_url": s.cfg.URL + "/approve/" + ar.ID,
 				"expires_at":  ar.Expires,
+				"reveal":      ar.Reveal,
+				"reused":      reused,
 			})
 			return
 		}
-		ev.Detail = "approved until " + until.Format("15:04:05")
 	}
 	value, err := s.seal.open(t.Name, t.valueEnc)
 	if err != nil {
