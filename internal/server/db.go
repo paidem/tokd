@@ -286,6 +286,7 @@ func (db *DB) logEvent(e Event) {
 type EventFilter struct {
 	Token, Scope, Kind, Host string
 	Kinds                    []string
+	Q                        string // substring of reason, detail, agent, directory or command
 	LoginID                  int64
 	Limit                    int
 }
@@ -304,6 +305,11 @@ func (db *DB) events(f EventFilter) ([]Event, error) {
 		for _, k := range f.Kinds {
 			args = append(args, k)
 		}
+	}
+	if f.Q != "" {
+		like := "%" + strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(f.Q) + "%"
+		q += ` AND (reason LIKE ? ESCAPE '\' OR detail LIKE ? ESCAPE '\' OR agent LIKE ? ESCAPE '\' OR cwd LIKE ? ESCAPE '\' OR cmd LIKE ? ESCAPE '\')`
+		args = append(args, like, like, like, like, like)
 	}
 	if f.LoginID != 0 {
 		q += ` AND login_id=?`

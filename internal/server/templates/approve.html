@@ -3,7 +3,7 @@
 <p class="ask"><b>{{.Req.Host}}</b> wants to use</p>
 <h1 class="tokname"><span class="tag {{sc .Req.Scope}}">{{.Req.Scope}}</span>{{.Req.Token}}</h1>{{with .Token}}<p class="sub">{{.Description}}</p>{{end}}
 <blockquote class="reason">{{.Req.Reason}}</blockquote>
-<dl class="facts">{{with .Req.Agent}}<dt>Agent</dt><dd class="mono">{{.}}</dd>{{end}}{{with .Req.Cwd}}<dt>Directory</dt><dd class="mono">{{.}}</dd>{{end}}
+<dl class="facts">{{with .Req.Agent}}<dt>Agent</dt><dd class="mono">{{range agentvars .}}<div>{{with index . 0}}{{.}}={{end}}{{index . 1}}</div>{{end}}</dd>{{end}}{{with .Req.Cwd}}<dt>Directory</dt><dd class="mono">{{.}}</dd>{{end}}
 {{with .Req.Cmd}}<dt>Command</dt><dd class="mono">{{.}}</dd>{{end}}<dt>Login</dt><dd>#{{.Req.LoginID}}</dd><dt>Asked</dt><dd>{{when .Req.Created}}</dd></dl>
 {{if ne .Req.Status "pending"}}<p class="alert {{if eq .Req.Status "approved"}}ok{{else}}err{{end}}">Already {{.Req.Status}}.</p>
 {{else if .Expired}}<p class="alert err">Expired. The agent has to ask again.</p>

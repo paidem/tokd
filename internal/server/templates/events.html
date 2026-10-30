@@ -1,5 +1,6 @@
 {{define "content"}}<header class="head"><h1>Events</h1></header>
 <form class="toolbar" method="get" role="search"><input type="text" name="token" value="{{.F.Token}}" placeholder="Token" aria-label="Token"><input type="text" name="scope" value="{{.F.Scope}}" placeholder="Scope" aria-label="Scope">
 <select name="kind" aria-label="Event kind"><option value="">Any event</option>{{range (list "use" "approval_requested" "approved" "approval_denied" "denied" "login" "login_revoked" "token_added" "token_updated" "token_deleted" "revealed_in_web")}}<option {{if eq . $.F.Kind}}selected{{end}}>{{.}}</option>{{end}}</select>
-<input type="text" name="host" value="{{.F.Host}}" placeholder="Host" aria-label="Host"><button>Filter</button>{{if or .F.Token .F.Scope .F.Kind .F.Host .F.LoginID}}<a class="btn quiet" href="/events">Clear</a>{{end}}</form>
+<input type="text" name="host" value="{{.F.Host}}" placeholder="Host" aria-label="Host">
+<input type="search" name="q" class="wide-search" value="{{.F.Q}}" placeholder="Search reason or context" title="Matches reason, agent variables (e.g. a session ID), directory and command" aria-label="Search reason and context"><button>Filter</button>{{if or .F.Token .F.Scope .F.Kind .F.Host .F.LoginID .F.Q}}<a class="btn quiet" href="/events">Clear</a>{{end}}</form>
 {{template "eventtable" .Events}}{{end}}

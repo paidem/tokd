@@ -145,3 +145,11 @@ document.addEventListener('click', ev => {
   else d.setFullYear(d.getFullYear() + n);
   input.value = d.toLocaleDateString('sv-SE'); // YYYY-MM-DD in local time
 });
+
+// Context dialogs in event tables; a click on the backdrop closes them.
+document.addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-dialog]');
+  if (btn) btn.nextElementSibling.showModal();
+  else if (ev.target.tagName === 'DIALOG') ev.target.close();
+});
+

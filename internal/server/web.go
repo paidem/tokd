@@ -24,7 +24,27 @@ var staticRoot embed.FS
 
 var staticFS fs.FS = staticRoot
 
+var agentVarKey = regexp.MustCompile(`(?:^|\s)([A-Z][A-Z0-9_]*)=`)
+
+func parseAgentVars(s string) [][2]string {
+	idx := agentVarKey.FindAllStringSubmatchIndex(s, -1)
+	if len(idx) == 0 && strings.TrimSpace(s) != "" {
+		return [][2]string{{"", strings.TrimSpace(s)}}
+	}
+	var out [][2]string
+	for i, m := range idx {
+		end := len(s)
+		if i+1 < len(idx) {
+			end = idx[i+1][0]
+		}
+		out = append(out, [2]string{s[m[2]:m[3]], strings.TrimSpace(s[m[1]:end])})
+	}
+	return out
+}
+
 var funcs = template.FuncMap{
+	// agentvars splits the client's "KEY=value KEY=value" agent string into pairs.
+	"agentvars": parseAgentVars,
 	// sc maps a scope name to one of eight tag colours (s0..s7 in style.css), stable across pages.
 	"sc": func(scope string) string {
 		h := fnv.New32a()
@@ -700,7 +720,7 @@ func (s *Server) doScopeDelete(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) pageEvents(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	f := EventFilter{Token: q.Get("token"), Scope: q.Get("scope"), Kind: q.Get("kind"), Host: q.Get("host")}
+	f := EventFilter{Token: q.Get("token"), Scope: q.Get("scope"), Kind: q.Get("kind"), Host: q.Get("host"), Q: strings.TrimSpace(q.Get("q"))}
 	f.LoginID, _ = strconv.ParseInt(q.Get("login"), 10, 64)
 	evs, err := s.db.events(f)
 	if err != nil {

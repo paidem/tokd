@@ -31,5 +31,10 @@
 <td>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}{{with .Scope}} <span class="tag {{sc .}}">{{.}}</span>{{end}}</td>
 <td>{{.Host}}{{with .LoginID}} <a class="sub" href="/events?login={{.}}" title="Events from login #{{.}}">#{{.}}</a>{{end}}</td>
 <td class="reason">{{.Reason}}</td>
-<td class="ctx">{{with .Agent}}<div>{{.}}</div>{{end}}{{with .Cwd}}<div>{{.}}</div>{{end}}{{with .Cmd}}<div>$ {{.}}</div>{{end}}</td></tr>
+<td class="end">{{if or .Agent .Cwd .Cmd}}<button type="button" class="small" data-dialog>Context</button>
+<dialog class="ctxbox"><div class="ctxin"><header><div><b>{{.Token}}</b> {{template "kind" .Kind}}<div class="sub">{{when .TS}}{{with .Host}}, {{.}}{{end}}</div></div><form method="dialog"><button class="small">Close</button></form></header>
+{{with .Reason}}<blockquote class="reason">{{.}}</blockquote>{{end}}
+<dl class="facts">{{range agentvars .Agent}}<dt>{{with index . 0}}{{.}}{{else}}Agent{{end}}</dt><dd class="mono"><a href="/events?q={{index . 1}}" title="Find all events with this value">{{index . 1}}</a></dd>{{end}}
+{{with .Cwd}}<dt>Directory</dt><dd class="mono"><a href="/events?q={{.}}" title="Find all events from this directory">{{.}}</a></dd>{{end}}</dl>
+{{with .Cmd}}<h3>Command</h3><pre class="term">{{.}}</pre>{{end}}</div></dialog>{{end}}</td></tr>
 {{else}}<tr><td colspan="6" class="empty">No events match.</td></tr>{{end}}</tbody></table></div>{{end}}

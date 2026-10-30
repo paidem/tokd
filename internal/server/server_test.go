@@ -145,6 +145,15 @@ func TestFlow(t *testing.T) {
 	if len(evs) != 2 || evs[0].Reason == "" || evs[0].Host != "testhost" {
 		t.Fatalf("events: %+v", evs)
 	}
+	if evs, _ := s.db.events(EventFilter{Q: "read-only query"}); len(evs) == 0 {
+		t.Fatal("context search found nothing")
+	}
+	if evs, _ := s.db.events(EventFilter{Q: "%"}); len(evs) != 0 {
+		t.Fatalf("LIKE wildcard not escaped: %d events", len(evs))
+	}
+	if got := funcs["agentvars"].(func(string) [][2]string)("AI_AGENT=claude CLAUDE_CODE_SESSION_ID=6e67-a2 X=a b"); len(got) != 3 || got[1] != [2]string{"CLAUDE_CODE_SESSION_ID", "6e67-a2"} || got[2][1] != "a b" {
+		t.Fatalf("agentvars: %q", got)
+	}
 	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
 		if top, step := niceScale(peak); top != want[0] || step != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)
