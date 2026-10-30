@@ -23,6 +23,15 @@ func TestGetNeedsRevealUnderAgent(t *testing.T) {
 	if err := cmdGet([]string{"--reason", "why", "x"}); err == nil || !strings.Contains(err.Error(), "not logged in") {
 		t.Fatalf("human get: %v", err)
 	}
+	// the harness (e.g. a Claude Code headersHelper) is not the agent; the agent's own shell is
+	t.Setenv("AI_AGENT", "claude-code_2-1-314_harness")
+	if err := cmdGet([]string{"--reason", "why", "x"}); err == nil || !strings.Contains(err.Error(), "not logged in") {
+		t.Fatalf("harness get: %v", err)
+	}
+	t.Setenv("AI_AGENT", "claude-code_2-1-314_agent")
+	if err := cmdGet([]string{"--reason", "why", "x"}); err == nil || !strings.Contains(err.Error(), "--reveal") {
+		t.Fatalf("agent shell get without --reveal: %v", err)
+	}
 }
 
 func TestNewer(t *testing.T) {

@@ -488,7 +488,12 @@ func cmdList(args []string) error {
 
 // agentEnv names the first environment variable showing tok runs under an AI agent, or "".
 // T3CODE_THREAD_ID is left out: it identifies the host app, which also runs human terminals.
+// AI_AGENT ending in "_harness" means the agent's harness itself runs tok (e.g. a Claude Code MCP
+// headersHelper): its output goes to the harness, not into the model's context.
 func agentEnv() string {
+	if strings.HasSuffix(os.Getenv("AI_AGENT"), "_harness") {
+		return ""
+	}
 	for _, k := range []string{"AI_AGENT", "CLAUDECODE", "CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID"} {
 		if os.Getenv(k) != "" {
 			return k
