@@ -1,5 +1,5 @@
 {{define "content"}}{{if not .Req}}<div class="panel narrow"><h1>Request not found</h1><p class="lede">Requests live 10 minutes and are lost when the server restarts. Ask the agent to try again.</p></div>
-{{else}}<form class="panel narrow" data-confirm="/approve/{{.Req.ID}}" data-ok-text="Approved. The agent continues on its own." onsubmit="return false">
+{{else}}<form class="panel narrow" data-confirm="/approve/{{.Req.ID}}" data-ok-text="Approved. The agent continues on its own." data-close onsubmit="return false">
 <p class="ask"><b>{{.Req.Host}}</b> wants to use</p>
 <h1 class="tokname"><span class="tag {{sc .Req.Scope}}">{{.Req.Scope}}</span>{{.Req.Token}}</h1>{{with .Token}}<p class="sub">{{.Description}}</p>{{end}}
 <blockquote class="reason">{{.Req.Reason}}</blockquote>

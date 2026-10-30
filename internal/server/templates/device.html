@@ -1,5 +1,5 @@
 {{define "content"}}{{if not .Device}}<div class="panel narrow"><h1>Login not found</h1><p class="lede">No pending login with code <b class="mono">{{.Code}}</b>. Codes expire after 10 minutes; run <code>tok login</code> again.</p></div>{{else}}
-<form class="panel narrow" data-confirm="/device/{{.Device.UserCode}}" data-ok-text="Approved. You can close this tab; tok is logged in." onsubmit="return false">
+<form class="panel narrow" data-confirm="/device/{{.Device.UserCode}}" data-ok-text="Approved. tok is logged in." data-close onsubmit="return false">
 <p class="ask"><b>{{.Device.Host}}</b> wants to log in</p>
 <div class="code mono">{{.Device.UserCode}}</div><p class="sub center">Check that this matches the code tok printed. Requested {{when .Device.Created}}.</p>
 <fieldset class="choice"><legend>Scopes this machine may use</legend>{{range .Scopes}}<label class="check"><input type="checkbox" name="scopes" value="{{.Name}}"><span><span class="tag {{sc .Name}}">{{.Name}}</span> <span class="sub">{{.Description}} ({{.Tokens}} token{{if ne .Tokens 1}}s{{end}})</span></span></label>{{end}}</fieldset>

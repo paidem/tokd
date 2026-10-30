@@ -81,6 +81,11 @@ document.addEventListener('click', async ev => {
     show(form.dataset.okText || res.ok, true);
     form.querySelectorAll('button').forEach(b => b.disabled = true);
     if (form.dataset.done) location.href = form.dataset.done;
+    // Tabs opened by tok (one-page history) may close themselves; browsers ignore this otherwise.
+    if (form.dataset.close !== undefined) setTimeout(() => {
+      window.close();
+      setTimeout(() => show(msg.textContent + ' You can close this tab.', true), 300);
+    }, 1500);
   } catch (e) { show(e.message, false); }
 });
 
