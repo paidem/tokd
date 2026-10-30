@@ -134,12 +134,21 @@ func download(url string) ([]byte, error) {
 // and refreshes the Claude Code skill if it is a plain file (a symlink is left alone).
 func cmdUpdate(args []string) error {
 	force := len(args) == 1 && args[0] == "--force"
-	if len(args) > 0 && !force {
-		return errors.New("usage: tok update [--force]")
+	check := len(args) == 1 && args[0] == "--check" // report only, install nothing
+	if len(args) > 0 && !force && !check {
+		return errors.New("usage: tok update [--check | --force]")
 	}
 	latest, err := latestRelease(0)
 	if err != nil {
 		return fmt.Errorf("cannot check for a new release: %w", err)
+	}
+	if check {
+		if newer(latest.Tok, version) {
+			fmt.Printf("tok %s is available (you have %s): run tok update\n", latest.Tok, version)
+		} else {
+			fmt.Printf("tok %s is up to date (latest release %s)\n", version, latest.Tag)
+		}
+		return nil
 	}
 	if _, ok := semver(version); !ok && !force {
 		return fmt.Errorf("this is a development build (%s); tok update --force replaces it with %s", version, latest.Tok)

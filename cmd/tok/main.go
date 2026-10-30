@@ -32,7 +32,8 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
                                 needs the owner's approval in the browser
   tok wait REQUEST_ID           block until an approval is decided
   tok version                   print the client version and build time
-  tok update [--force]          install the latest tok release from GitHub
+  tok update [--check|--force]  install the latest tok release from GitHub
+                                (--check only reports whether there is one)
 
 Every exec/get is logged on the server with the reason, host, directory and
 command. Tokens marked "needs approval" print an approval link and exit 3;
