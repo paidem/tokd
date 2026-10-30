@@ -23,16 +23,18 @@
 <div class="pw"><input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password"><button data-method="password" {{if not .Passkeys}}class="primary"{{end}}>{{.Verb}} with password</button></div>
 </div>{{end}}
 
+{{define "agent"}}{{with agentkind .}}{{if .Key}}<i class="agent {{.Key}}" role="img" aria-label="{{.Label}}" title="{{.Label}}"></i>{{end}}{{end}}{{end}}
+
 {{define "kind"}}<span class="kind {{if eq . "denied" "approval_denied" "web_login_failed" "login_revoked" "token_deleted"}}err{{else if eq . "approval_requested"}}warn{{else if eq . "use" "approved"}}ok{{end}}">{{.}}</span>{{end}}
 
 {{define "eventtable"}}<div class="tablewrap"><table class="events"><thead><tr><th>Time</th><th>Event</th><th>Token</th><th>Host</th><th>Reason</th><th>Context</th></tr></thead><tbody>
 {{range .}}<tr><td class="time">{{when .TS}}</td>
 <td>{{template "kind" .Kind}}{{with .Detail}}<div class="sub">{{.}}</div>{{end}}</td>
 <td>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}{{with .Scope}} <span class="tag {{sc .}}">{{.}}</span>{{end}}</td>
-<td>{{.Host}}{{with .LoginID}} <a class="sub" href="/events?login={{.}}" title="Events from login #{{.}}">#{{.}}</a>{{end}}</td>
+<td class="hostcell">{{template "agent" .Agent}}{{.Host}}{{with .LoginID}} <a class="sub" href="/events?login={{.}}" title="Events from login #{{.}}">#{{.}}</a>{{end}}</td>
 <td class="reason">{{.Reason}}</td>
 <td class="end">{{if or .Agent .Cwd .Cmd}}<button type="button" class="small" data-dialog>Context</button>
-<dialog class="ctxbox"><div class="ctxin"><header><div><b>{{.Token}}</b> {{template "kind" .Kind}}<div class="sub">{{when .TS}}{{with .Host}}, {{.}}{{end}}</div></div><form method="dialog"><button class="small">Close</button></form></header>
+<dialog class="ctxbox"><div class="ctxin"><header><div>{{template "agent" .Agent}}<b>{{.Token}}</b> {{template "kind" .Kind}}<div class="sub">{{when .TS}}{{with .Host}}, {{.}}{{end}}</div></div><form method="dialog"><button class="small">Close</button></form></header>
 {{with .Reason}}<blockquote class="reason">{{.}}</blockquote>{{end}}
 <dl class="facts">{{range agentvars .Agent}}<dt>{{with index . 0}}{{.}}{{else}}Agent{{end}}</dt><dd class="mono"><a href="/events?q={{index . 1}}" title="Find all events with this value">{{index . 1}}</a></dd>{{end}}
 {{with .Cwd}}<dt>Directory</dt><dd class="mono"><a href="/events?q={{.}}" title="Find all events from this directory">{{.}}</a></dd>{{end}}</dl>

@@ -24,6 +24,44 @@ var staticRoot embed.FS
 
 var staticFS fs.FS = staticRoot
 
+// agentRules decide which agent logo an event shows. The client sends the agent's
+// environment variables (see agentInfo in cmd/tok); the AI_AGENT value wins because it
+// is the most specific, then the presence of an agent's own variables.
+// To add an agent: drop static/agents/<key>.svg, add a .agent.<key> rule in style.css and an entry here.
+var agentRules = []struct {
+	Key, Label string
+	Names      []string // substrings of the AI_AGENT value
+	Vars       []string // environment variables only this agent sets
+}{
+	{"claude", "Claude", []string{"claude"}, []string{"CLAUDE_CODE_SESSION_ID", "CLAUDECODE"}},
+	{"openai", "Codex (OpenAI)", []string{"codex", "openai"}, []string{"CODEX_THREAD_ID"}},
+}
+
+type agentKind struct{ Key, Label string }
+
+func detectAgent(agent string) agentKind {
+	vars := map[string]string{}
+	for _, kv := range parseAgentVars(agent) {
+		vars[kv[0]] = kv[1]
+	}
+	name := strings.ToLower(vars["AI_AGENT"])
+	for _, r := range agentRules {
+		for _, n := range r.Names {
+			if name != "" && strings.Contains(name, n) {
+				return agentKind{r.Key, r.Label}
+			}
+		}
+	}
+	for _, r := range agentRules {
+		for _, v := range r.Vars {
+			if _, ok := vars[v]; ok {
+				return agentKind{r.Key, r.Label}
+			}
+		}
+	}
+	return agentKind{}
+}
+
 var agentVarKey = regexp.MustCompile(`(?:^|\s)([A-Z][A-Z0-9_]*)=`)
 
 func parseAgentVars(s string) [][2]string {
@@ -45,6 +83,7 @@ func parseAgentVars(s string) [][2]string {
 var funcs = template.FuncMap{
 	// agentvars splits the client's "KEY=value KEY=value" agent string into pairs.
 	"agentvars": parseAgentVars,
+	"agentkind": detectAgent,
 	// sc maps a scope name to one of eight tag colours (s0..s7 in style.css), stable across pages.
 	"sc": func(scope string) string {
 		h := fnv.New32a()

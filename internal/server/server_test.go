@@ -159,6 +159,17 @@ func TestFlow(t *testing.T) {
 	if evs, _ := s.db.events(EventFilter{Token: "old"}); len(evs) != 0 {
 		t.Fatal("retention did not purge old events")
 	}
+	for in, want := range map[string]string{
+		"AI_AGENT=claude-code_2-1-314_agent CLAUDE_CODE_SESSION_ID=x T3CODE_THREAD_ID=y": "claude",
+		"CODEX_THREAD_ID=abc":                     "openai",
+		"AI_AGENT=codex CLAUDE_CODE_SESSION_ID=x": "openai", // AI_AGENT is the most specific signal
+		"T3CODE_THREAD_ID=y":                      "",
+		"":                                        "",
+	} {
+		if got := detectAgent(in).Key; got != want {
+			t.Errorf("detectAgent(%q) = %q, want %q", in, got, want)
+		}
+	}
 	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
 		if top, step := niceScale(peak); top != want[0] || step != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)

@@ -24,5 +24,5 @@
 </div></div>
 <section class="block"><div class="sect-head"><h2>Recent requests</h2><a class="sub" href="/events">All events</a></div>
 <div class="tablewrap"><table class="recent"><thead><tr><th>When</th><th>Result</th><th>Token</th><th>Host</th><th>Reason</th></tr></thead><tbody>
-{{range .Recent}}<tr><td class="time" title="{{when .TS}}">{{ago .TS}}</td><td>{{template "kind" .Kind}}</td><td {{with .Scope}}title="Scope: {{.}}"{{end}}>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}</td><td>{{.Host}}</td><td class="reason">{{.Reason}}</td></tr>
+{{range .Recent}}<tr><td class="time" title="{{when .TS}}">{{ago .TS}}</td><td>{{template "kind" .Kind}}</td><td {{with .Scope}}title="Scope: {{.}}"{{end}}>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}</td><td class="hostcell">{{template "agent" .Agent}}{{.Host}}</td><td class="reason">{{.Reason}}</td></tr>
 {{else}}<tr><td colspan="5" class="empty">No requests yet. Agents appear here once they ask for a token with <code>tok</code>.</td></tr>{{end}}</tbody></table></div></section>{{end}}

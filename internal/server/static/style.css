@@ -54,9 +54,9 @@ body.app{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh
 .side nav a[aria-current]::before{background:var(--brass);box-shadow:none}
 .out{margin-top:auto}
 .out button{width:100%;justify-content:flex-start;color:var(--mut)}
-main{padding:36px 44px 64px;max-width:1240px;min-width:0}
+main{padding:36px 44px 64px;max-width:1800px;min-width:0}
 
-body.solo .top{display:flex;justify-content:space-between;align-items:center;max-width:1240px;margin:0 auto;padding:18px 24px}
+body.solo .top{display:flex;justify-content:space-between;align-items:center;max-width:1800px;margin:0 auto;padding:18px 24px}
 body.solo .top a[aria-current]{color:var(--ink)}
 body.solo main{margin:0 auto;padding:24px 20px 64px}
 
@@ -282,6 +282,7 @@ blockquote.reason{max-width:none;margin:18px 0;padding:14px 18px;border-left:3px
 .axis{display:flex;justify-content:space-between;color:var(--mut);font-size:12.5px;margin-top:6px}
 .recent .reason{max-width:none;width:55%}
 .recent td:nth-child(3),.recent td:nth-child(4){white-space:nowrap}
+.hostcell{white-space:nowrap}
 .sub.err{color:var(--err)}.sub.warn{color:var(--brass)}
 .list .name{font-weight:700;text-decoration:none}
 .list .name:hover{text-decoration:underline}
@@ -310,3 +311,8 @@ blockquote.reason{max-width:none;margin:18px 0;padding:14px 18px;border-left:3px
 .ctxin .facts a:hover{text-decoration:underline}
 .toolbar .wide-search{flex:2 1 18rem}
 .inline input.days{flex:0 0 8rem}
+
+/* Agent logos: SVG masks so each takes its colour from CSS. */
+.agent{display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-4px;background:currentColor;-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
+.agent.claude{--logo:url(/static/agents/claude.svg);background:#d97757}
+.agent.openai{--logo:url(/static/agents/openai.svg)}
