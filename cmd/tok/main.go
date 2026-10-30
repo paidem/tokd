@@ -29,7 +29,7 @@ const usage = `tok - use tokens stored in tokd, with a logged reason
                                 their values are masked in its output
   tok get --reason TEXT NAME    print a token value (prefer exec)
   tok wait REQUEST_ID           block until an approval is decided
-  tok version                   print the client version
+  tok version                   print the client version and build time
 
 Every exec/get is logged on the server with the reason, host, directory and
 command. Tokens marked "needs approval" print an approval link and exit 3;
@@ -44,6 +44,7 @@ type config struct {
 	Host      string    `json:"host"`
 	Scopes    []string  `json:"scopes"`
 	ExpiresAt time.Time `json:"expires_at"`
+	LoginAt   time.Time `json:"login_at,omitzero"`
 }
 
 func configPath() string {
@@ -79,7 +80,32 @@ func saveConfig(c *config) error {
 	return os.WriteFile(p, raw, 0o600)
 }
 
-var version = "dev" // set by -ldflags "-X main.version=..."
+// Set by -ldflags "-X main.version=... -X main.buildTime=...".
+var version, buildTime = "dev", ""
+
+func versionLine() string {
+	if buildTime == "" {
+		return "tok " + version
+	}
+	return "tok " + version + ", built " + buildTime
+}
+
+// loginLine describes the saved login from the config file alone (no network).
+func loginLine() string {
+	c, err := loadConfig()
+	switch {
+	case err != nil || c.Token == "":
+		return "Not logged in. Run: tok login <server-url>"
+	case time.Now().After(c.ExpiresAt):
+		return fmt.Sprintf("Login to %s expired %s. Run: tok login", c.Server, c.ExpiresAt.Local().Format("2006-01-02 15:04"))
+	}
+	since := ""
+	if !c.LoginAt.IsZero() {
+		since = ", logged in " + c.LoginAt.Local().Format("2006-01-02 15:04")
+	}
+	return fmt.Sprintf("Logged in to %s as %s (scopes %s)%s, expires %s.", c.Server, c.Host, strings.Join(c.Scopes, ","),
+		since, c.ExpiresAt.Local().Format("2006-01-02 15:04"))
+}
 
 var httpc = &http.Client{Timeout: 30 * time.Second}
 
@@ -128,8 +154,8 @@ func call(c *config, method, path string, in, out any) error {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Print(usage)
-		os.Exit(2)
+		fmt.Printf("%s\n%s\n\n%s", versionLine(), loginLine(), usage)
+		return
 	}
 	var err error
 	code := 1
@@ -149,7 +175,7 @@ func main() {
 	case "wait":
 		err = cmdWait(args)
 	case "version", "--version":
-		fmt.Println("tok", version)
+		fmt.Println(versionLine())
 		return
 	case "help", "-h", "--help":
 		fmt.Print(usage)
@@ -290,7 +316,7 @@ func cmdLogin(args []string) error {
 		if err != nil {
 			return err
 		}
-		c.Token, c.Scopes, c.ExpiresAt = res.Token, res.Scopes, res.ExpiresAt
+		c.Token, c.Scopes, c.ExpiresAt, c.LoginAt = res.Token, res.Scopes, res.ExpiresAt, time.Now()
 		if err := saveConfig(c); err != nil {
 			return err
 		}
@@ -321,13 +347,17 @@ func cmdStatus() error {
 		LoginID   int64     `json:"login_id"`
 		Host      string    `json:"host"`
 		Scopes    []string  `json:"scopes"`
+		CreatedAt time.Time `json:"created_at"`
 		ExpiresAt time.Time `json:"expires_at"`
 	}
 	if err := call(c, "GET", "/api/whoami", nil, &who); err != nil {
 		return err
 	}
-	fmt.Printf("server  %s\nlogin   #%d as %s\nscopes  %s\nexpires %s (in %s)\n", c.Server, who.LoginID, who.Host,
-		strings.Join(who.Scopes, ", "), who.ExpiresAt.Local().Format("2006-01-02 15:04"), time.Until(who.ExpiresAt).Round(time.Minute))
+	fmt.Printf("server  %s\nlogin   #%d as %s\nscopes  %s\n", c.Server, who.LoginID, who.Host, strings.Join(who.Scopes, ", "))
+	if !who.CreatedAt.IsZero() { // older servers don't send it
+		fmt.Printf("since   %s\n", who.CreatedAt.Local().Format("2006-01-02 15:04"))
+	}
+	fmt.Printf("expires %s (in %s)\n", who.ExpiresAt.Local().Format("2006-01-02 15:04"), time.Until(who.ExpiresAt).Round(time.Minute))
 	return nil
 }
 
