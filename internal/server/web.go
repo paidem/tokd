@@ -751,13 +751,27 @@ func (s *Server) pageSettings(w http.ResponseWriter, r *http.Request) {
 	scopes, _ := s.db.scopes()
 	def, _ := s.db.setting("default_scope")
 	s.render(w, r, "settings", map[string]any{"Passkeys": pks, "DefaultHours": s.loginDefaultHours(), "MaxHours": s.loginMaxHours(),
-		"Scopes": scopes, "DefaultScope": string(def), "Msg": r.URL.Query().Get("msg")})
+		"Scopes": scopes, "DefaultScope": string(def), "RetentionDays": s.eventRetentionDays(), "Msg": r.URL.Query().Get("msg")})
 }
 
 func (s *Server) doDefaultScope(w http.ResponseWriter, r *http.Request) {
 	scope := r.FormValue("default_scope") // empty = no default
 	_ = s.db.setSetting("default_scope", []byte(scope))
 	s.db.logEvent(Event{Kind: "settings_changed", Detail: "default scope for new tokens: " + scope})
+	http.Redirect(w, r, "/settings?msg=Saved", http.StatusSeeOther)
+}
+
+func (s *Server) doRetention(w http.ResponseWriter, r *http.Request) {
+	days, err := strconv.Atoi(r.FormValue("event_retention_days"))
+	if err != nil || days < 0 || (days > 0 && days < 7) {
+		http.Redirect(w, r, "/settings?msg=Keep+events+for+at+least+7+days,+or+0+to+keep+them+forever", http.StatusSeeOther)
+		return
+	}
+	_ = s.db.setSetting("event_retention_days", []byte(strconv.Itoa(days)))
+	if days > 0 {
+		s.db.purgeEvents(time.Now().AddDate(0, 0, -days))
+	}
+	s.db.logEvent(Event{Kind: "settings_changed", Detail: fmt.Sprintf("event retention %d days", days)})
 	http.Redirect(w, r, "/settings?msg=Saved", http.StatusSeeOther)
 }
 

@@ -11,6 +11,9 @@
 <form method="post" action="/settings" class="ctl"><div class="grid2"><div class="field"><label for="s-def">Default hours</label><input type="number" id="s-def" name="login_default_hours" value="{{.DefaultHours}}" min="1"></div>
 <div class="field"><label for="s-max">Maximum hours</label><input type="number" id="s-max" name="login_max_hours" value="{{.MaxHours}}" min="1"></div></div><div class="actions"><button>Save</button></div></form></section>
 
+<section class="setting"><div class="about"><h2>Event log</h2><p class="sub">Older events are deleted automatically. The overview needs 30 days of events for its charts.</p></div>
+<form method="post" action="/settings/retention" class="ctl"><div class="field"><label for="s-ret">Keep events for (days)</label><div class="inline"><input type="number" id="s-ret" class="days" name="event_retention_days" value="{{.RetentionDays}}" min="0"><button>Save</button></div><p class="hint">0 keeps everything. Minimum 7.</p></div></form></section>
+
 <section class="setting"><div class="about"><h2>Password</h2><p class="sub">At least 12 characters.</p></div>
 <form method="post" action="/settings/password" class="ctl stack"><div class="field"><label for="p-cur">Current password</label><input type="password" id="p-cur" name="current" autocomplete="current-password"></div>
 <div class="field"><label for="p-new">New password</label><input type="password" id="p-new" name="password" autocomplete="new-password"></div>

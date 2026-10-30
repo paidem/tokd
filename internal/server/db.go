@@ -342,6 +342,10 @@ func (db *DB) events(f EventFilter) ([]Event, error) {
 	return out, rows.Err()
 }
 
+func (db *DB) purgeEvents(before time.Time) {
+	_, _ = db.Exec(`DELETE FROM events WHERE ts<?`, before.Unix())
+}
+
 // usedTokens counts existing tokens with at least one use since t.
 func (db *DB) usedTokens(since time.Time) (n int) {
 	_ = db.QueryRow(`SELECT count(DISTINCT token) FROM events WHERE kind='use' AND ts>=? AND token IN (SELECT name FROM tokens)`, since.Unix()).Scan(&n)

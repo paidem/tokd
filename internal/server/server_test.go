@@ -154,6 +154,11 @@ func TestFlow(t *testing.T) {
 	if got := funcs["agentvars"].(func(string) [][2]string)("AI_AGENT=claude CLAUDE_CODE_SESSION_ID=6e67-a2 X=a b"); len(got) != 3 || got[1] != [2]string{"CLAUDE_CODE_SESSION_ID", "6e67-a2"} || got[2][1] != "a b" {
 		t.Fatalf("agentvars: %q", got)
 	}
+	s.db.logEvent(Event{Kind: "use", Token: "old", TS: time.Now().AddDate(0, 0, -40)})
+	form("/settings/retention", url.Values{"event_retention_days": {"30"}})
+	if evs, _ := s.db.events(EventFilter{Token: "old"}); len(evs) != 0 {
+		t.Fatal("retention did not purge old events")
+	}
 	for peak, want := range map[int][2]int{0: {1, 1}, 1: {1, 1}, 4: {4, 1}, 10: {10, 5}, 14: {15, 5}, 55: {60, 20}, 101: {150, 50}} {
 		if top, step := niceScale(peak); top != want[0] || step != want[1] {
 			t.Errorf("niceScale(%d) = %d, %d, want %v", peak, top, step, want)
