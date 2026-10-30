@@ -2,8 +2,8 @@ package server
 
 import (
 	"bytes"
-	"io"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -54,6 +54,13 @@ func TestFlow(t *testing.T) {
 	const pw = "correct horse battery"
 	form("/setup", url.Values{"password": {pw}, "password2": {pw}})
 	form("/scopes", url.Values{"name": {"acme"}})
+	form("/settings/default-scope", url.Values{"default_scope": {"acme"}})
+	if r, _ := web.Get(ts.URL + "/tokens/new"); r != nil {
+		b, _ := io.ReadAll(r.Body)
+		if !strings.Contains(string(b), "<option selected>acme</option>") {
+			t.Fatal("default scope not preselected on new token form")
+		}
+	}
 	// a validation error must keep everything that was typed
 	if r, err := web.PostForm(ts.URL+"/tokens", url.Values{"name": {"!!!"}, "scope": {"acme"}, "value": {"typed-secret-123"}, "description": {"typed desc"}, "expires_at": {"2030-01-31"}}); err != nil {
 		t.Fatal(err)

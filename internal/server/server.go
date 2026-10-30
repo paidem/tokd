@@ -190,6 +190,7 @@ func (s *Server) routes() http.Handler {
 	m.HandleFunc("GET /settings", s.withSession(s.pageSettings))
 	m.HandleFunc("POST /settings", s.withSession(s.doSettings))
 	m.HandleFunc("POST /settings/password", s.withSession(s.doPassword))
+	m.HandleFunc("POST /settings/default-scope", s.withSession(s.doDefaultScope))
 	m.HandleFunc("GET /passkeys/begin", s.withSession(s.passkeyRegisterBegin))
 	m.HandleFunc("POST /passkeys/finish", s.withSession(s.passkeyRegisterFinish))
 	m.HandleFunc("POST /passkeys/{id}/delete", s.withSession(s.doPasskeyDelete))

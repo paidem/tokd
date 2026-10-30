@@ -359,7 +359,12 @@ func (s *Server) pageTokens(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) pageTokenEdit(w http.ResponseWriter, r *http.Request) {
 	scopes, _ := s.db.scopes()
-	data := map[string]any{"Scopes": scopes, "Token": &Token{Scope: r.URL.Query().Get("scope")}}
+	scope := r.URL.Query().Get("scope")
+	if scope == "" {
+		v, _ := s.db.setting("default_scope")
+		scope = string(v)
+	}
+	data := map[string]any{"Scopes": scopes, "Token": &Token{Scope: scope}}
 	if id := r.PathValue("id"); id != "" {
 		n, _ := strconv.ParseInt(id, 10, 64)
 		t, err := s.db.tokenByID(n)
@@ -386,6 +391,7 @@ func normalizeName(s string) string {
 	}
 	return s
 }
+
 var validEnv = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
 
 func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
@@ -594,8 +600,17 @@ func (s *Server) doLoginRevoke(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) pageSettings(w http.ResponseWriter, r *http.Request) {
 	pks, _ := s.passkeys()
+	scopes, _ := s.db.scopes()
+	def, _ := s.db.setting("default_scope")
 	s.render(w, r, "settings", map[string]any{"Passkeys": pks, "DefaultHours": s.loginDefaultHours(), "MaxHours": s.loginMaxHours(),
-		"Msg": r.URL.Query().Get("msg")})
+		"Scopes": scopes, "DefaultScope": string(def), "Msg": r.URL.Query().Get("msg")})
+}
+
+func (s *Server) doDefaultScope(w http.ResponseWriter, r *http.Request) {
+	scope := r.FormValue("default_scope") // empty = no default
+	_ = s.db.setSetting("default_scope", []byte(scope))
+	s.db.logEvent(Event{Kind: "settings_changed", Detail: "default scope for new tokens: " + scope})
+	http.Redirect(w, r, "/settings?msg=Saved", http.StatusSeeOther)
 }
 
 func (s *Server) doSettings(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,8 @@
 <div class="card"><h3>Passkeys</h3>
 <table>{{range .Passkeys}}<tr><td>{{.Name}}</td><td class="mut">added {{when .CreatedAt}}, used {{ago .LastUsed}}</td><td><form method="post" action="/passkeys/{{.ID}}/delete"><button class="small">remove</button></form></td></tr>{{else}}<tr><td class="mut">None yet. Add one: approvals become a Touch ID / Face ID tap.</td></tr>{{end}}</table>
 <p class="row"><input type="text" id="pkname" placeholder="Laptop Touch ID"><button class="primary" data-register>Add passkey</button></p></div>
+<form method="post" action="/settings/default-scope" class="card"><h3>New tokens</h3>
+<div class="row"><label>Default scope for new tokens</label><select name="default_scope"><option value="">(none: first in list)</option>{{range .Scopes}}<option {{if eq .Name $.DefaultScope}}selected{{end}}>{{.Name}}</option>{{end}}</select><button>Save</button></div></form>
 <form method="post" action="/settings" class="card"><h3>tok login duration</h3>
 <div class="row"><label>Default hours</label><input type="number" name="login_default_hours" value="{{.DefaultHours}}" min="1"><label>Maximum hours</label><input type="number" name="login_max_hours" value="{{.MaxHours}}" min="1"><button>Save</button></div></form>
 <form method="post" action="/settings/password" class="card"><h3>Change password</h3>
