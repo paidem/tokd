@@ -1,0 +1,6 @@
+{{define "content"}}<h1>Logins</h1><p class="mut">Machines that ran <code>tok login</code>. Revoke to cut a machine off immediately.</p>
+<table><tr><th>#</th><th>Host</th><th>Scopes</th><th>Created</th><th>Expires</th><th>Last seen</th><th></th></tr>
+{{range .Logins}}<tr><td><a href="/events?login={{.ID}}">{{.ID}}</a></td><td>{{.Host}}</td><td>{{range .Scopes}}<span class="tag">{{.}}</span> {{end}}</td>
+<td class="mut">{{when .CreatedAt}}</td><td class="mut">{{when .ExpiresAt}}</td><td class="mut">{{ago .LastSeenAt}}</td>
+<td>{{if .Active}}<form method="post" action="/logins/{{.ID}}/revoke"><button class="small">revoke</button></form>{{else if .RevokedAt}}<span class="mut">revoked</span>{{else}}<span class="mut">expired</span>{{end}}</td></tr>
+{{else}}<tr><td colspan="7" class="mut">No logins yet. Run <code>tok login {{$.URL}}</code>.</td></tr>{{end}}</table>{{end}}

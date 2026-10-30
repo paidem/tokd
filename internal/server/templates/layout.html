@@ -1,0 +1,22 @@
+{{define "layout"}}<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tokd</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head><body>
+<nav><b>tokd</b>{{if .LoggedIn}}
+<a href="/" {{if eq .Page "tokens"}}class="on"{{end}}>Tokens</a>
+<a href="/scopes" {{if eq .Page "scopes"}}class="on"{{end}}>Scopes</a>
+<a href="/events" {{if eq .Page "events"}}class="on"{{end}}>Events</a>
+<a href="/logins" {{if eq .Page "logins"}}class="on"{{end}}>Logins</a>
+<a href="/settings" {{if eq .Page "settings"}}class="on"{{end}}>Settings</a>
+<form method="post" action="/logout"><button class="small">log out</button></form>{{end}}</nav>
+<main>{{template "content" .}}</main></body></html>{{end}}
+{{define "authbuttons"}}
+<div class="row">{{if .Passkeys}}<button class="primary" data-method="passkey">{{.Verb}} with passkey</button><span class="mut">or</span>{{end}}
+<input type="password" name="password" placeholder="password" autocomplete="current-password"><button data-method="password" {{if not .Passkeys}}class="primary"{{end}}>{{.Verb}} with password</button></div>
+{{end}}
+{{define "eventtable"}}<table><tr><th>Time</th><th>Event</th><th>Token</th><th>Host / login</th><th>Reason</th><th>Context</th></tr>
+{{range .}}<tr><td class="mut" style="white-space:nowrap">{{when .TS}}</td>
+<td><span class="tag {{if eq .Kind "denied" "approval_denied" "web_login_failed"}}err{{else if eq .Kind "approval_requested"}}warn{{else if eq .Kind "use" "approved"}}ok{{end}}">{{.Kind}}</span>{{with .Detail}}<div class="mut">{{.}}</div>{{end}}</td>
+<td>{{with .Token}}<a href="/events?token={{.}}">{{.}}</a>{{end}}{{with .Scope}} <span class="tag">{{.}}</span>{{end}}</td>
+<td>{{.Host}}{{with .LoginID}} <a class="mut" href="/events?login={{.}}">#{{.}}</a>{{end}}</td>
+<td>{{.Reason}}</td>
+<td class="mut mono">{{with .Agent}}<div>{{.}}</div>{{end}}{{with .Cwd}}<div>{{.}}</div>{{end}}{{with .Cmd}}<div>$ {{.}}</div>{{end}}</td></tr>
+{{else}}<tr><td colspan="6" class="mut">No events.</td></tr>{{end}}</table>{{end}}

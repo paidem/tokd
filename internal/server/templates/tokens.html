@@ -1,0 +1,13 @@
+{{define "content"}}<div class="row" style="justify-content:space-between"><h1>Tokens</h1><a href="/tokens/new{{if .Scope}}?scope={{.Scope}}{{end}}"><button class="primary">Add token</button></a></div>
+<div class="filters row"><span class="mut">Scope:</span> <a href="/">all</a>{{range .Scopes}} <a href="/?scope={{.Name}}" {{if eq $.Scope .Name}}style="font-weight:600"{{end}}>{{.Name}}</a> <span class="mut">({{.Tokens}})</span>{{end}}</div>
+<table><tr><th>Name</th><th>Scope</th><th>Description</th><th>Value</th><th>Added</th><th>Last used</th><th>Expires</th><th></th></tr>
+{{range .Tokens}}<tr>
+<td><a href="/tokens/{{.ID}}">{{.Name}}</a>{{if .NeedsApproval}} <span class="tag warn" title="each use needs your approval">approval</span>{{end}}<div class="mut mono">${{.EnvName}}</div></td>
+<td><span class="tag">{{.Scope}}</span></td>
+<td>{{.Description}}{{with .Usage}}<div class="mut">{{.}}</div>{{end}}</td>
+<td class="mono" id="v{{.ID}}">{{.Masked}}</td>
+<td class="mut">{{date .CreatedAt}}</td>
+<td class="mut">{{ago .LastUsedAt}}</td>
+<td class="{{if .Expired}}err{{else}}mut{{end}}">{{date .ExpiresAt}}</td>
+<td class="row"><button class="small" data-reveal="{{.ID}}">show</button><button class="small" data-copy="{{.ID}}">copy</button> <a class="mut" href="/events?token={{.Name}}">events</a></td>
+</tr>{{else}}<tr><td colspan="8" class="mut">No tokens yet.</td></tr>{{end}}</table>{{end}}

@@ -1,0 +1,8 @@
+{{define "content"}}<h1>Approve tok login</h1>
+{{if not .Device}}<div class="card"><p class="err">No pending login with code <b>{{.Code}}</b>. It may have expired (10 min); run <code>tok login</code> again.</p></div>{{else}}
+<form class="card" data-confirm="/device/{{.Device.UserCode}}" data-ok-text="Approved. You can close this tab; tok is logged in." onsubmit="return false">
+<dl><dt>Code</dt><dd class="mono"><b>{{.Device.UserCode}}</b> <span class="mut">must match what tok printed</span></dd><dt>Host</dt><dd>{{.Device.Host}}</dd><dt>Requested</dt><dd>{{when .Device.Created}}</dd></dl>
+<label>Scopes this machine may use</label>{{range .Scopes}}<label class="row" style="font-weight:400;margin:.2em 0"><input type="checkbox" name="scopes" value="{{.Name}}"> {{.Name}} <span class="mut">{{.Description}} ({{.Tokens}} tokens)</span></label>{{end}}
+<label>Valid for</label><select name="hours" data-int>{{range .Hours}}<option value="{{.}}" {{if eq . $.DefaultHours}}selected{{end}}>{{if lt . 24}}{{.}} h{{else}}{{div . 24}} days{{end}}</option>{{end}}</select>
+<p></p>{{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Approve")}}
+<p><button data-method="deny">Deny</button></p><p class="msg"></p></form>{{end}}{{end}}

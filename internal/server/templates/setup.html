@@ -1,0 +1,7 @@
+{{define "content"}}<h1>Set up tokd</h1>
+<form method="post" action="/setup" class="card">
+<p>Single user, no username. This password is the fallback; add a passkey on the next page.</p>
+<label>Password (12+ characters)</label><input type="password" name="password" autocomplete="new-password" required>
+<label>Repeat</label><input type="password" name="password2" autocomplete="new-password" required>
+<p><button class="primary">Create</button></p>{{with .Error}}<p class="err">{{.}}</p>{{end}}
+</form>{{end}}

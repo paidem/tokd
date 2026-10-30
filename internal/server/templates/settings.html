@@ -1,0 +1,9 @@
+{{define "content"}}<h1>Settings</h1>{{with .Msg}}<p class="ok">{{.}}</p>{{end}}
+<div class="card"><h3>Passkeys</h3>
+<table>{{range .Passkeys}}<tr><td>{{.Name}}</td><td class="mut">added {{when .CreatedAt}}, used {{ago .LastUsed}}</td><td><form method="post" action="/passkeys/{{.ID}}/delete"><button class="small">remove</button></form></td></tr>{{else}}<tr><td class="mut">None yet. Add one: approvals become a Touch ID / Face ID tap.</td></tr>{{end}}</table>
+<p class="row"><input type="text" id="pkname" placeholder="Laptop Touch ID"><button class="primary" data-register>Add passkey</button></p></div>
+<form method="post" action="/settings" class="card"><h3>tok login duration</h3>
+<div class="row"><label>Default hours</label><input type="number" name="login_default_hours" value="{{.DefaultHours}}" min="1"><label>Maximum hours</label><input type="number" name="login_max_hours" value="{{.MaxHours}}" min="1"><button>Save</button></div></form>
+<form method="post" action="/settings/password" class="card"><h3>Change password</h3>
+<label>Current</label><input type="password" name="current" autocomplete="current-password"><label>New (12+)</label><input type="password" name="password" autocomplete="new-password"><label>Repeat</label><input type="password" name="password2" autocomplete="new-password">
+<p><button>Change</button></p></form>{{end}}

@@ -1,0 +1,34 @@
+# tokd as its own tailnet node: https://<TS_HOSTNAME>.<TS_TAILNET>
+# Not published on the host network at all; only the tailnet can reach it.
+# Usage: cp .env.example .env, edit, then:
+#   mkdir -p data key ts-state && sudo chown 65532:65532 data key
+#   docker compose up -d --build
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    hostname: ${TS_HOSTNAME:-tok}
+    restart: unless-stopped
+    environment:
+      TS_HOSTNAME: ${TS_HOSTNAME:-tok}
+      TS_AUTHKEY: ${TS_AUTHKEY:-}          # empty: open the login link printed in `docker compose logs tailscale`
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: "true"                 # no /dev/net/tun or NET_ADMIN needed (Synology friendly)
+    volumes:
+      - ./ts-state:/var/lib/tailscale
+      - ./serve.json:/config/serve.json:ro
+
+  tokd:
+    build: ../..
+    image: tokd:local
+    restart: unless-stopped
+    network_mode: service:tailscale        # shares the node's network; serve proxies to 127.0.0.1:19191
+    depends_on: [tailscale]
+    environment:
+      TZ: ${TZ:-UTC}
+      TOKD_URL: https://${TS_HOSTNAME:-tok}.${TS_TAILNET:?set TS_TAILNET, e.g. your-tailnet.ts.net}
+      TOKD_ADDR: 127.0.0.1:19191
+      TOKD_KEY_FILE: /key/master.key
+    volumes:
+      - ./data:/data
+      - ./key:/key

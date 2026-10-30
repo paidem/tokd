@@ -1,0 +1,5 @@
+{{define "content"}}<h1>Events</h1>
+<form class="filters row" method="get"><input type="text" name="token" value="{{.F.Token}}" placeholder="token"><input type="text" name="scope" value="{{.F.Scope}}" placeholder="scope">
+<select name="kind"><option value="">any kind</option>{{range (list "use" "approval_requested" "approved" "approval_denied" "denied" "login" "login_revoked" "token_added" "token_updated" "token_deleted" "revealed_in_web")}}<option {{if eq . $.F.Kind}}selected{{end}}>{{.}}</option>{{end}}</select>
+<input type="text" name="host" value="{{.F.Host}}" placeholder="host"><button>filter</button> <a href="/events">clear</a></form>
+{{template "eventtable" .Events}}{{end}}

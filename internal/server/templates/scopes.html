@@ -1,0 +1,7 @@
+{{define "content"}}<h1>Scopes</h1>{{with .Error}}<p class="err">{{.}}</p>{{end}}
+<p class="mut">Each token belongs to one scope. <code>tok login</code> picks the scopes a machine may use; agents see the scope to tell home from work.</p>
+<table><tr><th>Name</th><th>Description</th><th>Tokens</th><th></th></tr>
+{{range .Scopes}}<tr><td><a href="/?scope={{.Name}}">{{.Name}}</a></td>
+<td><form method="post" action="/scopes" class="row"><input type="hidden" name="name" value="{{.Name}}"><input type="text" name="description" value="{{.Description}}"><button class="small">save</button></form></td>
+<td>{{.Tokens}}</td><td>{{if eq .Tokens 0}}<form method="post" action="/scopes/{{.Name}}/delete"><button class="small">delete</button></form>{{end}}</td></tr>{{end}}</table>
+<form method="post" action="/scopes" class="card row"><input type="text" name="name" placeholder="acme" required><input type="text" name="description" placeholder="ACME customer systems"><button class="primary">Add scope</button></form>{{end}}

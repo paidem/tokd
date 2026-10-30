@@ -1,0 +1,20 @@
+# Local single-machine use: http://localhost:19191 (passkeys work on localhost without TLS).
+# On a server, set TOKD_URL to the exact https origin you open in the browser.
+services:
+  tokd:
+    build: .
+    image: tokd:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:19191:19191"
+    environment:
+      TZ: ${TZ:-UTC}
+      TOKD_URL: ${TOKD_URL:-http://localhost:19191}
+      # Keep the key outside the data volume if you back /data up somewhere else.
+      TOKD_KEY_FILE: /key/master.key
+    volumes:
+      - tokd-data:/data
+      - tokd-key:/key
+volumes:
+  tokd-data:
+  tokd-key:

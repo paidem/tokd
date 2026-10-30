@@ -1,0 +1,3 @@
+{{define "content"}}<h1>Log in</h1>
+<form class="card" data-confirm="/login" data-done="{{if .Next}}{{.Next}}{{else}}/{{end}}" onsubmit="return false">
+{{template "authbuttons" (dict "Passkeys" .Passkeys "Verb" "Log in")}}<p class="msg"></p></form>{{end}}
