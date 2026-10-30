@@ -410,7 +410,15 @@ func (s *Server) doTokenSave(w http.ResponseWriter, r *http.Request) {
 		if old != nil {
 			t.ID = old.ID
 		}
-		s.render(w, r, "token_edit", map[string]any{"Scopes": scopes, "Token": t, "Edit": old != nil, "Error": msg})
+		if expires != nil {
+			e := time.Unix(*expires, 0)
+			t.ExpiresAt = &e
+		}
+		if old != nil && value == "" {
+			t.Masked = old.Masked
+		}
+		// re-render everything that was typed, including the secret, so nothing has to be retyped
+		s.render(w, r, "token_edit", map[string]any{"Scopes": scopes, "Token": t, "Edit": old != nil, "Error": msg, "Value": value})
 	}
 	switch {
 	case !validName.MatchString(t.Name):

@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"io"
 	"encoding/json"
 	"net/http"
 	"net/http/cookiejar"
@@ -53,6 +54,17 @@ func TestFlow(t *testing.T) {
 	const pw = "correct horse battery"
 	form("/setup", url.Values{"password": {pw}, "password2": {pw}})
 	form("/scopes", url.Values{"name": {"acme"}})
+	// a validation error must keep everything that was typed
+	if r, err := web.PostForm(ts.URL+"/tokens", url.Values{"name": {"bad name"}, "scope": {"acme"}, "value": {"typed-secret-123"}, "description": {"typed desc"}, "expires_at": {"2030-01-31"}}); err != nil {
+		t.Fatal(err)
+	} else {
+		b, _ := io.ReadAll(r.Body)
+		for _, want := range []string{"typed-secret-123", "typed desc", "2030-01-31", `value="bad name"`} {
+			if !strings.Contains(string(b), want) {
+				t.Fatalf("re-rendered form lost %q", want)
+			}
+		}
+	}
 	form("/tokens", url.Values{"name": {"zabbix-acme"}, "scope": {"acme"}, "value": {"abcdefghijklmnop"}, "description": {"zabbix api"}})
 	form("/tokens", url.Values{"name": {"prod-db"}, "scope": {"acme"}, "value": {"short"}, "needs_approval": {"on"}})
 	form("/tokens", url.Values{"name": {"ha"}, "scope": {"home"}, "value": {"home-secret-1234"}})

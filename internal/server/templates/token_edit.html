@@ -1,15 +1,15 @@
 {{define "content"}}<h1>{{if .Edit}}Edit {{.Token.Name}}{{else}}Add token{{end}}</h1>
 <form method="post" action="/tokens{{if .Edit}}/{{.Token.ID}}{{end}}" class="card" autocomplete="off">
 {{with .Error}}<p class="err">{{.}}</p>{{end}}
-<label>Name</label><input type="text" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required>
+<label>Name</label><input type="text" name="name" value="{{.Token.Name}}" placeholder="zabbix-acme-api" required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,63}" title="letters (stored lowercase), digits, dot, dash, underscore; no spaces">
 <label>Scope</label><select name="scope">{{range .Scopes}}<option {{if eq .Name $.Token.Scope}}selected{{end}}>{{.Name}}</option>{{end}}</select> <a class="mut" href="/scopes">manage scopes</a>
 <label>What it is</label><textarea name="description" placeholder="Zabbix API token for zabbix.example.com, read-only user api-ro">{{.Token.Description}}</textarea>
 <label>When to use</label><textarea name="usage" placeholder="Querying ACME Zabbix hosts/problems. Needs the office VPN.">{{.Token.Usage}}</textarea>
 <label>Secret {{if .Edit}}<span class="mut">(leave empty to keep the current {{.Token.Masked}})</span>{{end}}</label>
-<textarea name="value" class="mono" spellcheck="false" {{if not .Edit}}required{{end}}></textarea>
-<label>Env var for <code>tok exec</code></label><input type="text" name="env_name" value="{{.Token.EnvName}}" placeholder="default: name in UPPER_SNAKE">
+<textarea name="value" class="mono" spellcheck="false" {{if not .Edit}}required{{end}}>{{.Value}}</textarea>
+<label>Env var for <code>tok exec</code></label><input type="text" name="env_name" value="{{.Token.EnvName}}" placeholder="default: name in UPPER_SNAKE" pattern="[A-Za-z_][A-Za-z0-9_]{0,63}" title="like ZABBIX_TOKEN">
 <label>Expires <span class="mut">(optional; shown to agents, refused after)</span></label><input type="date" name="expires_at" value="{{date .Token.ExpiresAt}}">
-<label class="row"><input type="checkbox" name="needs_approval" {{if .Token.NeedsApproval}}checked{{end}}> Each use needs my approval (passkey/password, then a 5-60 min window)</label>
+<label class="row"><input type="checkbox" name="needs_approval" {{if .Token.NeedsApproval}}checked{{end}}> Each use needs my approval <span class="mut">(the agent gets a link; you confirm with passkey or password and pick how long this machine may keep using it: 5, 15 or 60 min)</span></label>
 <p class="row"><button class="primary">Save</button> <a href="/">cancel</a></p></form>
 {{if .Edit}}<form method="post" action="/tokens/{{.Token.ID}}/delete" onsubmit="return confirm('Delete {{.Token.Name}}? The event log is kept.')"><button>Delete token</button></form>
 <h1 style="margin-top:1.5em">Recent events</h1>{{template "eventtable" .Events}}{{end}}{{end}}
